@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="NOMO Logo" width="120" />
+  <img src="nomo-logo.png" alt="NOMO Logo" width="320" />
   <h1>NOMO — Personal Memory Map</h1>
   <p><em>NOMO remembers where you've been, not where to go.</em></p>
 </div>
