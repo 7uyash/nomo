@@ -17,8 +17,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+
 import java.io.File
 
 @Composable
@@ -45,15 +44,6 @@ fun NomoMapView(
         }
     }
 
-    // "My Location" blue dot overlay — automatically follows real device GPS
-    val myLocationOverlay = remember {
-        MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
-            enableMyLocation()
-            enableFollowLocation()
-            isDrawAccuracyEnabled = true
-        }
-    }
-
     // Center map on user location as soon as userLat/userLon updates to valid coordinates
     LaunchedEffect(userLat, userLon) {
         if (userLat != 0.0 && userLon != 0.0) {
@@ -64,23 +54,10 @@ fun NomoMapView(
         }
     }
 
-    // Add location overlay
-    LaunchedEffect(Unit) {
-        if (!mapView.overlays.contains(myLocationOverlay)) {
-            mapView.overlays.add(myLocationOverlay)
-        }
-    }
-
     // Re-center on user whenever centerOnUser is triggered
     LaunchedEffect(centerOnUser) {
-        if (centerOnUser) {
-            myLocationOverlay.enableFollowLocation()
-            val loc = myLocationOverlay.myLocation
-            if (loc != null) {
-                mapView.controller.animateTo(loc)
-            } else if (userLat != 0.0 && userLon != 0.0) {
-                mapView.controller.animateTo(GeoPoint(userLat, userLon))
-            }
+        if (centerOnUser && userLat != 0.0 && userLon != 0.0) {
+            mapView.controller.animateTo(GeoPoint(userLat, userLon))
             onCenterConsumed()
         }
     }
@@ -130,13 +107,7 @@ fun NomoMapView(
         modifier = modifier.fillMaxSize()
     )
 
-    // Lifecycle: start/stop location updates
-    DisposableEffect(Unit) {
-        myLocationOverlay.enableMyLocation()
-        onDispose {
-            myLocationOverlay.disableMyLocation()
-        }
-    }
+
 }
 
 /**
