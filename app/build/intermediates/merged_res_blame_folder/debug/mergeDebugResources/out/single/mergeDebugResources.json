@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.nomo.app-debug-68:/xml_file_paths.xml.flat",
+        "source": "com.nomo.app-main-70:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.nomo.app-debug-68:/xml_backup_rules.xml.flat",
+        "source": "com.nomo.app-main-70:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.nomo.app-debug-68:/xml_data_extraction_rules.xml.flat",
+        "source": "com.nomo.app-main-70:/xml/data_extraction_rules.xml"
+    }
+]
