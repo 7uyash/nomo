@@ -85,4 +85,4 @@ To enable Google Drive sync and Google Sign-In, you must configure a Google Clou
 - **"On This Day":** Throwbacks to memories from the exact same day in previous years.
 
 ---
-*Built with ❤️ for those who want to remember the moments, not just the places.*
+*Built for ❤️ with ❤️ for those who want to remember the moments, not just the places.*
