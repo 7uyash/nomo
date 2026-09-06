@@ -42,7 +42,6 @@ class GoogleDriveManager(private val context: Context) {
     suspend fun initializeFolders(): Boolean = withContext(Dispatchers.IO) {
         val drive = getDriveService() ?: return@withContext false
         try {
-            // Find or create NOMO_Memories root folder
             rootFolderId = findOrCreateFolder(drive, "NOMO_Memories", null)
             if (rootFolderId != null) {
                 photosFolderId = findOrCreateFolder(drive, "Photos", rootFolderId)
@@ -87,6 +86,21 @@ class GoogleDriveManager(private val context: Context) {
         return folder.id
     }
 
+    /**
+     * Checks if a file with [fileName] already exists inside [folderId] on Google Drive.
+     * Prevents duplicate uploads on network retry (idempotency guarantee).
+     */
+    private fun findExistingFileId(drive: Drive, fileName: String, folderId: String): String? {
+        val query = "name = '$fileName' and '$folderId' in parents and trashed = false"
+        val result = drive.files().list()
+            .setQ(query)
+            .setSpaces("drive")
+            .setFields("files(id, name)")
+            .execute()
+
+        return result.files.firstOrNull()?.id
+    }
+
     suspend fun syncMemoryToDrive(memory: MemoryEntity): Pair<String?, String?> = withContext(Dispatchers.IO) {
         val drive = getDriveService() ?: return@withContext null to null
         try {
@@ -95,54 +109,71 @@ class GoogleDriveManager(private val context: Context) {
                 if (!initialized) return@withContext null to null
             }
 
-            // 1. Upload photo if file exists locally
-            val localPhotoFile = File(memory.photoPath)
-            var uploadedPhotoId = memory.driveFileId
+            val photoFileName = "${memory.id}.jpg"
+            val jsonFileName = "${memory.id}.json"
 
-            if (uploadedPhotoId == null && localPhotoFile.exists()) {
-                val mediaContent = FileContent("image/jpeg", localPhotoFile)
-                val photoMetadata = com.google.api.services.drive.model.File().apply {
-                    name = "photo_${memory.id}.jpg"
-                    parents = listOf(photosFolderId)
+            // 1. Check for existing uploaded photo (Idempotency check)
+            var uploadedPhotoId = memory.driveFileId
+            if (uploadedPhotoId == null) {
+                uploadedPhotoId = findExistingFileId(drive, photoFileName, photosFolderId!!)
+            }
+
+            // If not found on Drive and local photo file exists, upload it
+            if (uploadedPhotoId == null) {
+                val localPhotoFile = File(memory.photoPath)
+                if (localPhotoFile.exists()) {
+                    val mediaContent = FileContent("image/jpeg", localPhotoFile)
+                    val photoMetadata = com.google.api.services.drive.model.File().apply {
+                        name = photoFileName
+                        parents = listOf(photosFolderId)
+                    }
+                    val photoFile = drive.files().create(photoMetadata, mediaContent)
+                        .setFields("id")
+                        .execute()
+                    uploadedPhotoId = photoFile.id
                 }
-                val photoFile = drive.files().create(photoMetadata, mediaContent)
+            }
+
+            // 2. Check for existing uploaded memory JSON manifest (Idempotency check)
+            var uploadedJsonId = memory.driveJsonId
+            if (uploadedJsonId == null) {
+                uploadedJsonId = findExistingFileId(drive, jsonFileName, memoriesFolderId!!)
+            }
+
+            if (uploadedJsonId == null) {
+                val jsonObject = JSONObject().apply {
+                    put("id", memory.id)
+                    put("latitude", memory.latitude)
+                    put("longitude", memory.longitude)
+                    put("timestamp", memory.timestamp)
+                    put("placeName", memory.placeName)
+                    put("dishName", memory.dishName ?: "")
+                    put("foodVibe", memory.foodVibe ?: "")
+                    put("category", memory.category)
+                    put("note", memory.note ?: "")
+                    put("tripId", memory.tripId ?: "")
+                    put("photoDriveFileId", uploadedPhotoId ?: "")
+                }
+
+                val tempJsonFile = File(context.cacheDir, jsonFileName).apply {
+                    writeText(jsonObject.toString(2))
+                }
+
+                val jsonContent = FileContent("application/json", tempJsonFile)
+                val jsonMetadata = com.google.api.services.drive.model.File().apply {
+                    name = jsonFileName
+                    parents = listOf(memoriesFolderId)
+                }
+
+                val jsonFile = drive.files().create(jsonMetadata, jsonContent)
                     .setFields("id")
                     .execute()
-                uploadedPhotoId = photoFile.id
+
+                uploadedJsonId = jsonFile.id
+                tempJsonFile.delete()
             }
 
-            // 2. Upload Memory JSON manifest
-            val jsonObject = JSONObject().apply {
-                put("id", memory.id)
-                put("latitude", memory.latitude)
-                put("longitude", memory.longitude)
-                put("timestamp", memory.timestamp)
-                put("placeName", memory.placeName)
-                put("dishName", memory.dishName ?: "")
-                put("foodVibe", memory.foodVibe ?: "")
-                put("category", memory.category)
-                put("note", memory.note ?: "")
-                put("tripId", memory.tripId ?: "")
-                put("photoDriveFileId", uploadedPhotoId ?: "")
-            }
-
-            val tempJsonFile = File(context.cacheDir, "memory_${memory.id}.json").apply {
-                writeText(jsonObject.toString(2))
-            }
-
-            val jsonContent = FileContent("application/json", tempJsonFile)
-            val jsonMetadata = com.google.api.services.drive.model.File().apply {
-                name = "memory_${memory.id}.json"
-                parents = listOf(memoriesFolderId)
-            }
-
-            val jsonFile = drive.files().create(jsonMetadata, jsonContent)
-                .setFields("id")
-                .execute()
-
-            tempJsonFile.delete()
-
-            Pair(uploadedPhotoId, jsonFile.id)
+            Pair(uploadedPhotoId, uploadedJsonId)
         } catch (e: Exception) {
             e.printStackTrace()
             Pair(null, null)

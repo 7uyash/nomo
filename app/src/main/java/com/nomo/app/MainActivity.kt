@@ -99,16 +99,19 @@ class MainActivity : ComponentActivity() {
         var capturedLon by remember { mutableStateOf(77.2090) }
         var showCaptureSheet by remember { mutableStateOf(false) }
 
-        // Resurfacing memory state
+        // Resurfacing memory states
         var resurfacingMatch by remember { mutableStateOf<Pair<MemoryEntity, Double>?>(null) }
+        var onThisDayMemory by remember { mutableStateOf<MemoryEntity?>(null) }
 
-        // Location check for resurfacing
-        LaunchedEffect(Unit) {
+        // Location check & "On This Day" throwback check
+        LaunchedEffect(memories) {
             val loc = locationHelper.getCurrentLocation()
             if (loc != null) {
                 val match = repository.getResurfacingMemoryNear(loc.latitude, loc.longitude)
                 resurfacingMatch = match
             }
+            val otdList = repository.getOnThisDayMemories()
+            onThisDayMemory = otdList.firstOrNull()
         }
 
         // Photo Take Picture Contract Launcher
@@ -221,6 +224,7 @@ class MainActivity : ComponentActivity() {
                             memories = memories,
                             pendingSyncCount = pendingSyncList.size,
                             resurfacingMatch = resurfacingMatch,
+                            onThisDayMemory = onThisDayMemory,
                             onMemoryClick = { id -> selectedDetailMemoryId = id },
                             onProfileSyncClick = { currentTab = "Profile" }
                         )

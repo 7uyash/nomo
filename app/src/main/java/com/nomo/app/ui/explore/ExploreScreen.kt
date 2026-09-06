@@ -24,16 +24,19 @@ import coil.compose.AsyncImage
 import com.nomo.app.data.local.MemoryEntity
 import com.nomo.app.ui.components.FoodCategoryChip
 import com.nomo.app.ui.components.NomoTopBar
+import com.nomo.app.ui.components.OnThisDayBanner
 import com.nomo.app.ui.components.ResurfacingBanner
 import com.nomo.app.ui.components.SyncStatusBadge
 import com.nomo.app.ui.theme.*
 import java.io.File
+import java.util.Calendar
 
 @Composable
 fun ExploreScreen(
     memories: List<MemoryEntity>,
     pendingSyncCount: Int,
     resurfacingMatch: Pair<MemoryEntity, Double>?,
+    onThisDayMemory: MemoryEntity?,
     onMemoryClick: (String) -> Unit,
     onProfileSyncClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -43,6 +46,7 @@ fun ExploreScreen(
     var showSearchField by remember { mutableStateOf(false) }
     var selectedMemory by remember { mutableStateOf<MemoryEntity?>(null) }
     var showResurfacing by remember { mutableStateOf(true) }
+    var showOnThisDay by remember { mutableStateOf(true) }
 
     val categories = listOf("All", "Food", "Cafe", "Travel", "Event", "Shopping", "Landmark", "Personal")
 
@@ -133,8 +137,21 @@ fun ExploreScreen(
                 }
             }
 
-            // Resurfacing Banner ("You've been here before 👀")
-            if (showResurfacing && resurfacingMatch != null && selectedMemory == null) {
+            // On This Day Banner ("A year ago today 📍 You were here.")
+            if (showOnThisDay && onThisDayMemory != null && selectedMemory == null) {
+                val nowYear = Calendar.getInstance().get(Calendar.YEAR)
+                val memYear = Calendar.getInstance().apply { timeInMillis = onThisDayMemory.timestamp }.get(Calendar.YEAR)
+                val yearsAgo = (nowYear - memYear).coerceAtLeast(1)
+
+                OnThisDayBanner(
+                    memory = onThisDayMemory,
+                    yearsAgo = yearsAgo,
+                    onMemoryClick = { onMemoryClick(it) },
+                    onDismiss = { showOnThisDay = false }
+                )
+            }
+            // Location Proximity Resurfacing Banner ("You've been here before 👀")
+            else if (showResurfacing && resurfacingMatch != null && selectedMemory == null) {
                 ResurfacingBanner(
                     memory = resurfacingMatch.first,
                     distanceMeters = resurfacingMatch.second,

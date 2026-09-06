@@ -1,10 +1,13 @@
 package com.nomo.app.utils
 
 import com.nomo.app.data.local.MemoryEntity
+import java.util.Calendar
+import java.util.Date
 import kotlin.math.*
 
 object HaversineUtils {
     private const val EARTH_RADIUS_METERS = 6371000.0
+    const val DEFAULT_RESURFACE_RADIUS_METERS = 300.0
 
     /**
      * Calculates distance between two GPS coordinates in meters.
@@ -32,7 +35,7 @@ object HaversineUtils {
         currentLat: Double,
         currentLon: Double,
         memories: List<MemoryEntity>,
-        radiusMeters: Double = 300.0,
+        radiusMeters: Double = DEFAULT_RESURFACE_RADIUS_METERS,
         minAgeMillis: Long = 3600_000L // 1 hour threshold
     ): List<Pair<MemoryEntity, Double>> {
         val now = System.currentTimeMillis()
@@ -44,5 +47,30 @@ object HaversineUtils {
             }
             .filter { it.second <= radiusMeters }
             .sortedBy { it.second } // Nearest first
+    }
+
+    /**
+     * Finds memories captured on this same Month & Day in previous years ("On this day" throwback).
+     */
+    fun findOnThisDayMemories(
+        memories: List<MemoryEntity>,
+        nowMillis: Long = System.currentTimeMillis()
+    ): List<MemoryEntity> {
+        val todayCal = Calendar.getInstance().apply { timeInMillis = nowMillis }
+        val currentMonth = todayCal.get(Calendar.MONTH)
+        val currentDay = todayCal.get(Calendar.DAY_OF_MONTH)
+        val currentYear = todayCal.get(Calendar.YEAR)
+
+        val memCal = Calendar.getInstance()
+
+        return memories.filter { memory ->
+            memCal.timeInMillis = memory.timestamp
+            val memoryMonth = memCal.get(Calendar.MONTH)
+            val memoryDay = memCal.get(Calendar.DAY_OF_MONTH)
+            val memoryYear = memCal.get(Calendar.YEAR)
+
+            // Match month and day, but strictly from an earlier year
+            memoryMonth == currentMonth && memoryDay == currentDay && memoryYear < currentYear
+        }.sortedByDescending { it.timestamp }
     }
 }

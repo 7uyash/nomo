@@ -88,7 +88,6 @@ class MemoryRepository(private val context: Context) {
     }
 
     suspend fun deleteMemory(memory: MemoryEntity) = withContext(Dispatchers.IO) {
-        // Remove local photo file
         val file = File(memory.photoPath)
         if (file.exists()) file.delete()
         memoryDao.deleteMemory(memory)
@@ -109,10 +108,22 @@ class MemoryRepository(private val context: Context) {
      * Checks if user's current location is close to an existing memory (within [radiusMeters]).
      * Returns the closest matching memory for "You've been here before 👀" resurfacing banner.
      */
-    suspend fun getResurfacingMemoryNear(lat: Double, lon: Double, radiusMeters: Double = 300.0): Pair<MemoryEntity, Double>? = withContext(Dispatchers.IO) {
+    suspend fun getResurfacingMemoryNear(
+        lat: Double,
+        lon: Double,
+        radiusMeters: Double = HaversineUtils.DEFAULT_RESURFACE_RADIUS_METERS
+    ): Pair<MemoryEntity, Double>? = withContext(Dispatchers.IO) {
         val allMemories = memoryDao.getAllMemories()
         val candidates = HaversineUtils.findNearbyMemories(lat, lon, allMemories, radiusMeters)
         candidates.firstOrNull()
+    }
+
+    /**
+     * Checks if there are memories captured on this same day in a previous year ("On this day").
+     */
+    suspend fun getOnThisDayMemories(): List<MemoryEntity> = withContext(Dispatchers.IO) {
+        val allMemories = memoryDao.getAllMemories()
+        HaversineUtils.findOnThisDayMemories(allMemories)
     }
 
     fun scheduleSync() {
