@@ -1,0 +1,76 @@
+# ============================================================
+# NOMO — Android .gitignore
+# ============================================================
+
+# ── Build outputs ────────────────────────────────────────────
+/build/
+app/build/
+**/build/
+
+# ── Gradle cache & wrapper internals ─────────────────────────
+.gradle/
+gradle/wrapper/gradle-wrapper.jar   # regenerated on first sync
+
+# ── Android Studio / IntelliJ project files ──────────────────
+# Keep: *.iml (module structure), .idea/codeStyles, .idea/dictionaries
+# Drop: everything that is machine-specific or IDE-state
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.classpath
+.idea/androidTestResultsUserPreferences.xml
+.idea/.gitignore
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetDropDown.xml
+.idea/deploymentTargetSelector.xml
+.idea/navEditor.xml
+.idea/inspectionProfiles/Project_Default.xml
+
+# ── Local machine / SDK paths ─────────────────────────────────
+# Contains the local Android SDK path — different on every machine
+local.properties
+
+# ── Secret / sensitive files ──────────────────────────────────
+# Never commit API keys, signing configs, or service account files
+google-services.json         # Firebase config (add per-environment)
+keystore.jks
+*.keystore
+*.p12
+signing.properties
+secrets.properties
+*.env
+
+# ── OS cruft ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Kotlin / Java compiled output ─────────────────────────────
+*.class
+*.dex
+
+# ── APK / AAB release artifacts ───────────────────────────────
+*.apk
+*.aab
+*.ap_
+*.aar
+
+# ── ProGuard / R8 mapping (keep release map separately) ───────
+*.map
+/app/release/
+
+# ── Capture / test photos written by the app at runtime ───────
+# (These live in app-private storage on-device, never in source)
+app/src/main/assets/test_photos/
+
+# ── Lint & profiling output ───────────────────────────────────
+lint-results*
+*.hprof
+captures/
+
+# ── Android Studio navigation safe args (generated) ──────────
+app/src/main/java/**/generated/
