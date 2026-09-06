@@ -13,12 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.nomo.app.data.local.MemoryEntity
-import com.nomo.app.ui.theme.NomoTerracotta
-import com.nomo.app.ui.theme.NomoWarmAmber
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.File
 
 @Composable
@@ -27,30 +27,54 @@ fun NomoMapView(
     selectedMemoryId: String?,
     onMemorySelect: (MemoryEntity) -> Unit,
     modifier: Modifier = Modifier,
-    centerLat: Double = 28.6139,
-    centerLon: Double = 77.2090,
+    userLat: Double = 0.0,
+    userLon: Double = 0.0,
+    centerOnUser: Boolean = false,
+    onCenterConsumed: () -> Unit = {},
     zoomLevel: Double = 14.0
 ) {
     val context = LocalContext.current
 
+    // Build the OSMDroid MapView once
     val mapView = remember {
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             setBuiltInZoomControls(false)
             controller.setZoom(zoomLevel)
-            controller.setCenter(GeoPoint(centerLat, centerLon))
         }
     }
 
-    LaunchedEffect(memories, selectedMemoryId) {
-        mapView.overlays.clear()
-
-        // Center on existing memory if available
-        if (memories.isNotEmpty() && selectedMemoryId == null) {
-            val latest = memories.first()
-            mapView.controller.animateTo(GeoPoint(latest.latitude, latest.longitude))
+    // "My Location" blue dot overlay (uses device GPS/network internally)
+    val myLocationOverlay = remember {
+        MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
+            enableMyLocation()
         }
+    }
+
+    // Initial center: use live location if available, else first memory, else world center
+    LaunchedEffect(Unit) {
+        mapView.overlays.add(myLocationOverlay)
+        val initialCenter = when {
+            userLat != 0.0 && userLon != 0.0 -> GeoPoint(userLat, userLon)
+            memories.isNotEmpty() -> GeoPoint(memories.first().latitude, memories.first().longitude)
+            else -> GeoPoint(20.5937, 78.9629) // India center as safe default
+        }
+        mapView.controller.setCenter(initialCenter)
+    }
+
+    // Re-center on user whenever centerOnUser is triggered
+    LaunchedEffect(centerOnUser) {
+        if (centerOnUser && userLat != 0.0 && userLon != 0.0) {
+            mapView.controller.animateTo(GeoPoint(userLat, userLon))
+            onCenterConsumed()
+        }
+    }
+
+    // Redraw memory markers whenever memories or selection changes
+    LaunchedEffect(memories, selectedMemoryId) {
+        // Keep myLocationOverlay; clear only marker overlays
+        mapView.overlays.removeIf { it is Marker }
 
         memories.forEach { memory ->
             val marker = Marker(mapView).apply {
@@ -59,7 +83,7 @@ fun NomoMapView(
                 snippet = memory.placeName
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
 
-                val iconBitmap = createCustomMarkerBitmap(context, memory)
+                val iconBitmap = createCustomMarkerBitmap(context, memory, isSelected = memory.id == selectedMemoryId)
                 icon = BitmapDrawable(context.resources, iconBitmap)
 
                 setOnMarkerClickListener { _, _ ->
@@ -78,31 +102,40 @@ fun NomoMapView(
         factory = { mapView },
         modifier = modifier.fillMaxSize()
     )
+
+    // Lifecycle: start/stop location updates
+    DisposableEffect(Unit) {
+        myLocationOverlay.enableMyLocation()
+        onDispose {
+            myLocationOverlay.disableMyLocation()
+        }
+    }
 }
 
 /**
  * Creates a playful photo marker bitmap with rounded photo thumbnail & food vibe emoji badge.
+ * Selected markers get a brighter amber ring to stand out.
  */
-private fun createCustomMarkerBitmap(context: Context, memory: MemoryEntity): Bitmap {
+private fun createCustomMarkerBitmap(
+    context: Context,
+    memory: MemoryEntity,
+    isSelected: Boolean = false
+): Bitmap {
     val size = 110
     val bitmap = Bitmap.createBitmap(size, size + 20, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
 
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    // Outer border (Terracotta)
-    paint.color = 0xFFD96B43.toInt()
+    // Outer border — amber when selected, terracotta otherwise
+    paint.color = if (isSelected) 0xFFFFC105.toInt() else 0xFFD96B43.toInt()
     val outerRect = RectF(5f, 5f, size.toFloat() - 5f, size.toFloat() - 5f)
     canvas.drawRoundRect(outerRect, 24f, 24f, paint)
 
-    // Inner photo container
+    // Inner photo
     val innerFile = File(memory.photoPath)
     val photoBitmap = if (innerFile.exists()) {
-        try {
-            BitmapFactory.decodeFile(memory.photoPath)
-        } catch (e: Exception) {
-            null
-        }
+        try { BitmapFactory.decodeFile(memory.photoPath) } catch (e: Exception) { null }
     } else null
 
     if (photoBitmap != null) {
@@ -110,13 +143,13 @@ private fun createCustomMarkerBitmap(context: Context, memory: MemoryEntity): Bi
         canvas.drawBitmap(scaledPhoto, 10f, 10f, null)
     } else {
         // Fallback flat amber fill
-        paint.color = 0xFFECA843.toInt()
+        paint.color = 0xFFFFC105.toInt()
         val innerRect = RectF(10f, 10f, size.toFloat() - 10f, size.toFloat() - 10f)
         canvas.drawRoundRect(innerRect, 20f, 20f, paint)
     }
 
     // Pointer pin at bottom
-    paint.color = 0xFFD96B43.toInt()
+    paint.color = if (isSelected) 0xFFFFC105.toInt() else 0xFFD96B43.toInt()
     val path = android.graphics.Path().apply {
         moveTo(size / 2f - 15f, size.toFloat() - 6f)
         lineTo(size / 2f + 15f, size.toFloat() - 6f)
@@ -125,12 +158,14 @@ private fun createCustomMarkerBitmap(context: Context, memory: MemoryEntity): Bi
     }
     canvas.drawPath(path, paint)
 
-    // Badge Emoji overlay on top-right
+    // Vibe emoji badge top-right
     val vibeEmoji = memory.foodVibe?.take(2) ?: when (memory.category) {
-        "Food" -> "🍕"
-        "Cafe" -> "☕"
-        "Travel" -> "✈️"
-        else -> "📍"
+        "Food"     -> "🍕"
+        "Cafe"     -> "☕"
+        "Travel"   -> "✈️"
+        "Event"    -> "🎉"
+        "Landmark" -> "🏛️"
+        else       -> "📍"
     }
 
     paint.color = 0xFFFFFDF9.toInt()

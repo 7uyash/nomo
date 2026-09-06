@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 // NOMO Playful & Warm Palette (STRICTLY NO COLOR GRADIENTS)
 val NomoTerracotta = Color(0xFFD96B43)
-val NomoWarmAmber = Color(0xFFECA843)
+val NomoWarmAmber = Color(0xFFFFC105)
 val NomoSage = Color(0xFF5B8C67)
 val NomoDeepCharcoal = Color(0xFF232528)
 val NomoCream = Color(0xFFFBF8F3)

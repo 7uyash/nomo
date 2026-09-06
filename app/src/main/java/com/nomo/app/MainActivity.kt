@@ -108,13 +108,42 @@ class MainActivity : ComponentActivity() {
         // Resurfacing memory states
         var resurfacingMatch by remember { mutableStateOf<Pair<MemoryEntity, Double>?>(null) }
         var onThisDayMemory by remember { mutableStateOf<MemoryEntity?>(null) }
+        var userLat by remember { mutableStateOf(0.0) }
+        var userLon by remember { mutableStateOf(0.0) }
+
+        var locationPermissionGranted by remember {
+            mutableStateOf(
+                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            )
+        }
+
+        val startupPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        }
+
+        LaunchedEffect(Unit) {
+            if (!locationPermissionGranted) {
+                startupPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
 
         // Location check & "On This Day" throwback check
-        LaunchedEffect(memories) {
-            val loc = locationHelper.getCurrentLocation()
-            if (loc != null) {
-                val match = repository.getResurfacingMemoryNear(loc.latitude, loc.longitude)
-                resurfacingMatch = match
+        LaunchedEffect(memories, locationPermissionGranted) {
+            if (locationPermissionGranted) {
+                val loc = locationHelper.getCurrentLocation()
+                if (loc != null) {
+                    userLat = loc.latitude
+                    userLon = loc.longitude
+                    val match = repository.getResurfacingMemoryNear(loc.latitude, loc.longitude)
+                    resurfacingMatch = match
+                }
             }
             val otdList = repository.getOnThisDayMemories()
             onThisDayMemory = otdList.firstOrNull()
@@ -232,7 +261,9 @@ class MainActivity : ComponentActivity() {
                             resurfacingMatch = resurfacingMatch,
                             onThisDayMemory = onThisDayMemory,
                             onMemoryClick = { id -> selectedDetailMemoryId = id },
-                            onProfileSyncClick = { currentTab = "Settings" }
+                            onProfileSyncClick = { currentTab = "Settings" },
+                            userLat = userLat,
+                            userLon = userLon
                         )
 
                         "Memories" -> TimelineScreen(

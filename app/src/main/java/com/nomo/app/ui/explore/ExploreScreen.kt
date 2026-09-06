@@ -45,6 +45,8 @@ fun ExploreScreen(
     onThisDayMemory: MemoryEntity?,
     onMemoryClick: (String) -> Unit,
     onProfileSyncClick: () -> Unit,
+    userLat: Double = 0.0,
+    userLon: Double = 0.0,
     modifier: Modifier = Modifier
 ) {
     var selectedTimeFilter by remember { mutableStateOf("All") }
@@ -53,6 +55,7 @@ fun ExploreScreen(
     var selectedMemory by remember { mutableStateOf<MemoryEntity?>(null) }
     var showResurfacing by remember { mutableStateOf(true) }
     var showOnThisDay by remember { mutableStateOf(true) }
+    var centerOnUser by remember { mutableStateOf(false) }
 
     // Filter memories by time range
     val filteredMemories = remember(memories, selectedTimeFilter, searchQuery) {
@@ -80,7 +83,11 @@ fun ExploreScreen(
         NomoMapView(
             memories = filteredMemories,
             selectedMemoryId = selectedMemory?.id,
-            onMemorySelect = { memory -> selectedMemory = memory }
+            onMemorySelect = { memory -> selectedMemory = memory },
+            userLat = userLat,
+            userLon = userLon,
+            centerOnUser = centerOnUser,
+            onCenterConsumed = { centerOnUser = false }
         )
 
         // ── 2. Top overlay (TopBar + time filters + banner) ───────────────
@@ -192,7 +199,7 @@ fun ExploreScreen(
         ) {
             // Location / compass button
             FloatingMapButton(
-                onClick = { /* center on current location */ },
+                onClick = { centerOnUser = true },
                 content = {
                     Icon(
                         imageVector = Icons.Default.MyLocation,
