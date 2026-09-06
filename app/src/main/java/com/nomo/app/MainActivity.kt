@@ -123,6 +123,7 @@ class MainActivity : ComponentActivity() {
             locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         }
 
+        // On first launch: ask for location permission if not already granted
         LaunchedEffect(Unit) {
             if (!locationPermissionGranted) {
                 startupPermissionLauncher.launch(
@@ -134,16 +135,22 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Location check & "On This Day" throwback check
-        LaunchedEffect(memories, locationPermissionGranted) {
+        // Fetch live location the moment permission is granted (or was already granted)
+        LaunchedEffect(locationPermissionGranted) {
             if (locationPermissionGranted) {
                 val loc = locationHelper.getCurrentLocation()
                 if (loc != null) {
                     userLat = loc.latitude
                     userLon = loc.longitude
-                    val match = repository.getResurfacingMemoryNear(loc.latitude, loc.longitude)
-                    resurfacingMatch = match
                 }
+            }
+        }
+
+        // Resurfacing / On-This-Day check (runs whenever memories list changes)
+        LaunchedEffect(memories) {
+            if (locationPermissionGranted && userLat != 0.0 && userLon != 0.0) {
+                val match = repository.getResurfacingMemoryNear(userLat, userLon)
+                resurfacingMatch = match
             }
             val otdList = repository.getOnThisDayMemories()
             onThisDayMemory = otdList.firstOrNull()
