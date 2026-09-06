@@ -20,21 +20,21 @@ class LocationHelper(private val context: Context) {
     suspend fun getCurrentLocation(): Location? {
         return suspendCancellableCoroutine { continuation ->
             try {
-                // Try GPS last known
+                // 1. Try GPS last known (within 10 mins)
                 val gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                if (gpsLocation != null && (System.currentTimeMillis() - gpsLocation.time) < 60_000) {
+                if (gpsLocation != null && (System.currentTimeMillis() - gpsLocation.time) < 600_000) {
                     continuation.resume(gpsLocation)
                     return@suspendCancellableCoroutine
                 }
 
-                // Try Network last known
+                // 2. Try Network last known (within 10 mins)
                 val networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                if (networkLocation != null && (System.currentTimeMillis() - networkLocation.time) < 60_000) {
+                if (networkLocation != null && (System.currentTimeMillis() - networkLocation.time) < 600_000) {
                     continuation.resume(networkLocation)
                     return@suspendCancellableCoroutine
                 }
 
-                // Fall back to active location update request
+                // 3. Fall back to active location listener
                 val listener = object : LocationListener {
                     override fun onLocationChanged(location: Location) {
                         locationManager.removeUpdates(this)
@@ -48,31 +48,43 @@ class LocationHelper(private val context: Context) {
                     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
                 }
 
-                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, listener, null)
-                } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                    locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, listener, null)
+                val provider = when {
+                    locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+                    else -> null
+                }
+
+                if (provider != null) {
+                    locationManager.requestLocationUpdates(provider, 0L, 0f, listener)
                 } else {
-                    // Fallback default coordinates if GPS is unavailable in emulator/test (e.g. Delhi default)
-                    val defaultLoc = Location("default").apply {
-                        latitude = 28.6139
-                        longitude = 77.2090
+                    // Try getting any stale last location regardless of age before fallback
+                    val anyGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    val anyNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    val bestAny = anyGps ?: anyNet
+                    if (bestAny != null) {
+                        continuation.resume(bestAny)
+                    } else {
+                        val defaultLoc = Location("default").apply {
+                            latitude = 28.6139
+                            longitude = 77.2090
+                        }
+                        continuation.resume(defaultLoc)
                     }
-                    continuation.resume(defaultLoc)
                 }
 
                 continuation.invokeOnCancellation {
                     locationManager.removeUpdates(listener)
                 }
-
             } catch (e: Exception) {
-                // Default fallback coordinate (Delhi / Central location)
-                val defaultLoc = Location("fallback").apply {
+                val anyGps = try { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) } catch (_: Exception) { null }
+                val anyNet = try { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) } catch (_: Exception) { null }
+                val bestAny = anyGps ?: anyNet
+                val fallbackLoc = bestAny ?: Location("fallback").apply {
                     latitude = 28.6139
                     longitude = 77.2090
                 }
                 if (continuation.isActive) {
-                    continuation.resume(defaultLoc)
+                    continuation.resume(fallbackLoc)
                 }
             }
         }

@@ -45,37 +45,64 @@ fun NomoMapView(
         }
     }
 
-    // "My Location" blue dot overlay (uses device GPS/network internally)
+    // "My Location" blue dot overlay — automatically follows real device GPS
     val myLocationOverlay = remember {
         MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
             enableMyLocation()
+            enableFollowLocation()
+            isDrawAccuracyEnabled = true
         }
     }
 
-    // Initial center: use live location if available, else first memory, else world center
-    LaunchedEffect(Unit) {
-        mapView.overlays.add(myLocationOverlay)
-        val initialCenter = when {
-            userLat != 0.0 && userLon != 0.0 -> GeoPoint(userLat, userLon)
-            memories.isNotEmpty() -> GeoPoint(memories.first().latitude, memories.first().longitude)
-            else -> GeoPoint(20.5937, 78.9629) // India center as safe default
+    // Center map on user location as soon as userLat/userLon updates to valid coordinates
+    LaunchedEffect(userLat, userLon) {
+        if (userLat != 0.0 && userLon != 0.0) {
+            mapView.controller.setCenter(GeoPoint(userLat, userLon))
+            mapView.controller.setZoom(16.0)
+        } else if (memories.isNotEmpty()) {
+            mapView.controller.setCenter(GeoPoint(memories.first().latitude, memories.first().longitude))
         }
-        mapView.controller.setCenter(initialCenter)
+    }
+
+    // Add location overlay
+    LaunchedEffect(Unit) {
+        if (!mapView.overlays.contains(myLocationOverlay)) {
+            mapView.overlays.add(myLocationOverlay)
+        }
     }
 
     // Re-center on user whenever centerOnUser is triggered
     LaunchedEffect(centerOnUser) {
-        if (centerOnUser && userLat != 0.0 && userLon != 0.0) {
-            mapView.controller.animateTo(GeoPoint(userLat, userLon))
+        if (centerOnUser) {
+            myLocationOverlay.enableFollowLocation()
+            val loc = myLocationOverlay.myLocation
+            if (loc != null) {
+                mapView.controller.animateTo(loc)
+            } else if (userLat != 0.0 && userLon != 0.0) {
+                mapView.controller.animateTo(GeoPoint(userLat, userLon))
+            }
             onCenterConsumed()
         }
     }
 
-    // Redraw memory markers whenever memories or selection changes
-    LaunchedEffect(memories, selectedMemoryId) {
+    // Redraw memory markers & user position marker whenever state changes
+    LaunchedEffect(memories, selectedMemoryId, userLat, userLon) {
         // Keep myLocationOverlay; clear only marker overlays
         mapView.overlays.removeIf { it is Marker }
 
+        // 1. User Current Location Pin Marker
+        if (userLat != 0.0 && userLon != 0.0) {
+            val userMarker = Marker(mapView).apply {
+                position = GeoPoint(userLat, userLon)
+                title = "You Are Here"
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                val iconBitmap = createUserPinBitmap()
+                icon = BitmapDrawable(context.resources, iconBitmap)
+            }
+            mapView.overlays.add(userMarker)
+        }
+
+        // 2. Memory Markers
         memories.forEach { memory ->
             val marker = Marker(mapView).apply {
                 position = GeoPoint(memory.latitude, memory.longitude)
@@ -176,6 +203,30 @@ private fun createCustomMarkerBitmap(
         textAlign = Paint.Align.CENTER
     }
     canvas.drawText(vibeEmoji, size - 18f, 25f, textPaint)
+
+    return bitmap
+}
+
+/**
+ * Creates a bright glowing blue location marker pin for the user's current spot.
+ */
+private fun createUserPinBitmap(): Bitmap {
+    val size = 70
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    // Outer translucent blue halo ring
+    paint.color = 0x55007AFF.toInt()
+    canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
+
+    // Middle solid white ring
+    paint.color = 0xFFFFFFFF.toInt()
+    canvas.drawCircle(size / 2f, size / 2f, size / 3.2f, paint)
+
+    // Core bright blue pin dot
+    paint.color = 0xFF007AFF.toInt()
+    canvas.drawCircle(size / 2f, size / 2f, size / 4.8f, paint)
 
     return bitmap
 }
