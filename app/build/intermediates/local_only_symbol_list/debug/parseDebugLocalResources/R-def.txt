@@ -1,5 +1,6 @@
 R_DEF: Internal format may change without notice
 local
+drawable nomo_logo
 string app_name
 style Theme.NOMO
 xml backup_rules

@@ -1,13 +1,12 @@
 package com.nomo.app.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -19,13 +18,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.nomo.app.R
 import com.nomo.app.ui.theme.*
 
 @Composable
 fun NomoTopBar(
-    title: String = "NOMO",
-    subtitle: String = "Remembers where you've been",
+    subtitle: String = "Places. People. Food. Memories.",
     pendingSyncCount: Int = 0,
+    onSearchClick: () -> Unit = {},
     onProfileSyncClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -33,62 +33,69 @@ fun NomoTopBar(
         modifier = modifier
             .fillMaxWidth()
             .background(NomoCream)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(NomoTerracotta)
-                    .border(2.dp, NomoWarmAmber, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "🗺️", fontSize = 20.sp)
-            }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Column {
-                Text(
-                    text = title,
-                    style = Typography.titleLarge,
-                    color = NomoDeepCharcoal,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 11.sp,
-                    color = NomoDeepCharcoal.copy(alpha = 0.7f),
-                    fontWeight = FontWeight.Medium
-                )
-            }
+        // Left: Logo image + subtitle
+        Column {
+            // NOMO wordmark via drawable
+            androidx.compose.foundation.Image(
+                painter = painterResource(id = R.drawable.nomo_logo),
+                contentDescription = "NOMO",
+                modifier = Modifier.height(36.dp)
+            )
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = NomoDeepCharcoal.copy(alpha = 0.55f),
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.3.sp
+            )
         }
 
-        IconButton(
-            onClick = onProfileSyncClick,
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(NomoSurface)
-                .border(1.dp, NomoCardBorder, RoundedCornerShape(12.dp))
+        // Right: Search icon + Profile avatar
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Search icon button
+            IconButton(
+                onClick = onSearchClick,
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(NomoSurface)
+                    .border(1.dp, NomoCardBorder, CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = NomoDeepCharcoal,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Profile / Sync avatar circle
             BadgedBox(
                 badge = {
                     if (pendingSyncCount > 0) {
                         Badge(containerColor = NomoWarmAmber) {
-                            Text(text = "$pendingSyncCount", color = NomoDeepCharcoal, fontSize = 10.sp)
+                            Text(text = "$pendingSyncCount", color = NomoDeepCharcoal, fontSize = 9.sp)
                         }
                     }
                 }
             ) {
-                Icon(
-                    imageVector = Icons.Default.CloudSync,
-                    contentDescription = "Sync",
-                    tint = NomoTerracotta
-                )
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(NomoDeepCharcoal)
+                        .clickable { onProfileSyncClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "👤", fontSize = 18.sp)
+                }
             }
         }
     }

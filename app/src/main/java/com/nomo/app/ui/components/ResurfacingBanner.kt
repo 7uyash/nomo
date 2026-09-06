@@ -5,8 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +21,10 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Compact proximity-resurfacing banner.
+ * Layout matches the mockup: photo thumb | text block | yellow "View →" pill button
+ */
 @Composable
 fun ResurfacingBanner(
     memory: MemoryEntity,
@@ -32,98 +34,86 @@ fun ResurfacingBanner(
     modifier: Modifier = Modifier
 ) {
     val dateStr = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(memory.timestamp))
+    val categoryLabel = memory.category.replaceFirstChar { it.uppercase() }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .border(2.dp, NomoWarmAmber, RoundedCornerShape(20.dp))
-            .clickable { onMemoryClick(memory.id) },
-        shape = RoundedCornerShape(20.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = NomoSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "👀", fontSize = 18.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "You've been here before!",
-                        style = Typography.titleMedium,
-                        color = NomoTerracotta,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Photo thumbnail
+            AsyncImage(
+                model = File(memory.photoPath),
+                contentDescription = memory.placeName,
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(NomoCream),
+                contentScale = ContentScale.Crop
+            )
 
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss",
-                        tint = NomoDeepCharcoal.copy(alpha = 0.6f)
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Text block
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "🍴", fontSize = 13.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "You've been here before ✦✦",
+                        fontSize = 12.sp,
+                        color = NomoDeepCharcoal.copy(alpha = 0.65f),
+                        fontWeight = FontWeight.Medium
                     )
                 }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = memory.dishName ?: memory.placeName,
+                    style = Typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = NomoDeepCharcoal,
+                    maxLines = 1
+                )
+                Text(
+                    text = "$dateStr · $categoryLabel",
+                    fontSize = 11.sp,
+                    color = NomoDeepCharcoal.copy(alpha = 0.5f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = File(memory.photoPath),
-                    contentDescription = memory.placeName,
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(NomoCream),
-                    contentScale = ContentScale.Crop
+            // Yellow "View →" pill button
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(NomoWarmAmber)
+                    .clickable { onMemoryClick(memory.id) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "View →",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = NomoDeepCharcoal
                 )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = memory.dishName ?: memory.placeName,
-                        style = Typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    if (!memory.dishName.isNull_or_empty()) {
-                        Text(
-                            text = "📍 ${memory.placeName}",
-                            style = Typography.bodyMedium,
-                            color = NomoDeepCharcoal.copy(alpha = 0.7f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        memory.foodVibe?.let { vibe ->
-                            Text(text = vibe, fontSize = 12.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                        }
-                        Text(
-                            text = "Visited $dateStr (${distanceMeters.toInt()}m away)",
-                            fontSize = 11.sp,
-                            color = NomoSage,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
             }
         }
     }
 }
 
 /**
- * "On This Day" Memory Resurfacing Banner ("A year ago today 📍 You were here.")
+ * "On This Day" Memory Resurfacing Banner — same compact style.
  */
 @Composable
 fun OnThisDayBanner(
@@ -135,91 +125,78 @@ fun OnThisDayBanner(
 ) {
     val dateStr = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(memory.timestamp))
     val timeLabel = if (yearsAgo == 1) "A year ago today" else "$yearsAgo years ago today"
+    val categoryLabel = memory.category.replaceFirstChar { it.uppercase() }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .border(2.dp, NomoTerracotta, RoundedCornerShape(20.dp))
-            .clickable { onMemoryClick(memory.id) },
-        shape = RoundedCornerShape(20.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = NomoSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "📅 📍", fontSize = 18.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "$timeLabel... You were here!",
-                        style = Typography.titleMedium,
-                        color = NomoTerracotta,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Photo thumbnail
+            AsyncImage(
+                model = File(memory.photoPath),
+                contentDescription = memory.placeName,
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(NomoCream),
+                contentScale = ContentScale.Crop
+            )
 
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Dismiss",
-                        tint = NomoDeepCharcoal.copy(alpha = 0.6f)
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "📅", fontSize = 13.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "$timeLabel ✦✦",
+                        fontSize = 12.sp,
+                        color = NomoDeepCharcoal.copy(alpha = 0.65f),
+                        fontWeight = FontWeight.Medium
                     )
                 }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = memory.dishName ?: memory.placeName,
+                    style = Typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = NomoDeepCharcoal,
+                    maxLines = 1
+                )
+                Text(
+                    text = "$dateStr · $categoryLabel",
+                    fontSize = 11.sp,
+                    color = NomoDeepCharcoal.copy(alpha = 0.5f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AsyncImage(
-                    model = File(memory.photoPath),
-                    contentDescription = memory.placeName,
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(NomoCream),
-                    contentScale = ContentScale.Crop
+            // Terracotta "View →" pill button (slight variation to distinguish)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(NomoWarmAmber)
+                    .clickable { onMemoryClick(memory.id) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "View →",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = NomoDeepCharcoal
                 )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = memory.dishName ?: memory.placeName,
-                        style = Typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    if (!memory.dishName.isNull_or_empty()) {
-                        Text(
-                            text = "📍 ${memory.placeName}",
-                            style = Typography.bodyMedium,
-                            color = NomoDeepCharcoal.copy(alpha = 0.7f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        memory.foodVibe?.let { vibe ->
-                            Text(text = vibe, fontSize = 12.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                        }
-                        Text(
-                            text = dateStr,
-                            fontSize = 11.sp,
-                            color = NomoSage,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
             }
         }
     }

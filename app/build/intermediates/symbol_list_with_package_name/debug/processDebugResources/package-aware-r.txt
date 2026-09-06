@@ -682,6 +682,7 @@ drawable moreinfo_arrow
 drawable moreinfo_arrow_pressed
 drawable navto_small
 drawable next
+drawable nomo_logo
 drawable notification_action_background
 drawable notification_bg
 drawable notification_bg_low

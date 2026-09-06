@@ -19,11 +19,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Luggage
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.MoreTime
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -80,7 +86,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun NomoAppMainScreen() {
-        var currentTab by remember { mutableStateOf("Explore") }
+        var currentTab by remember { mutableStateOf("Map") }
         var selectedDetailMemoryId by remember { mutableStateOf<String?>(null) }
         var selectedTripFilterId by remember { mutableStateOf<String?>(null) }
 
@@ -220,26 +226,26 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     when (currentTab) {
-                        "Explore" -> ExploreScreen(
+                        "Map" -> ExploreScreen(
                             memories = memories,
                             pendingSyncCount = pendingSyncList.size,
                             resurfacingMatch = resurfacingMatch,
                             onThisDayMemory = onThisDayMemory,
                             onMemoryClick = { id -> selectedDetailMemoryId = id },
-                            onProfileSyncClick = { currentTab = "Profile" }
+                            onProfileSyncClick = { currentTab = "Settings" }
                         )
 
-                        "Timeline" -> TimelineScreen(
+                        "Memories" -> TimelineScreen(
                             memories = memories,
                             onMemoryClick = { id -> selectedDetailMemoryId = id }
                         )
 
-                        "Trips" -> TripsScreen(
+                        "Food" -> TripsScreen(
                             trips = trips,
                             memories = memories,
                             onTripClick = { tripId ->
                                 selectedTripFilterId = tripId
-                                currentTab = "Timeline"
+                                currentTab = "Memories"
                             },
                             onCreateTripClick = { name, desc ->
                                 lifecycleScope.launch {
@@ -248,7 +254,7 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        "Profile" -> ProfileSyncScreen(
+                        "Settings" -> ProfileSyncScreen(
                             googleAccountName = googleAccountName,
                             memories = memories,
                             onConnectGoogleClick = { launchGoogleSignIn() },
@@ -316,60 +322,64 @@ private fun NomoBottomNavBar(
 ) {
     Surface(
         color = NomoCream,
-        shadowElevation = 8.dp,
+        shadowElevation = 12.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp)
+                .padding(top = 8.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Map tab
             NavItem(
-                label = "Explore",
-                icon = Icons.Default.Explore,
-                isSelected = currentTab == "Explore",
-                onClick = { onTabSelected("Explore") }
+                label = "Map",
+                icon = Icons.Default.Map,
+                isSelected = currentTab == "Map",
+                onClick = { onTabSelected("Map") }
             )
 
+            // Memories tab
             NavItem(
-                label = "Timeline",
+                label = "Memories",
                 icon = Icons.Default.Timeline,
-                isSelected = currentTab == "Timeline",
-                onClick = { onTabSelected("Timeline") }
+                isSelected = currentTab == "Memories",
+                onClick = { onTabSelected("Memories") }
             )
 
-            // Center Prominent Camera Capture Button (FAB)
+            // Center + capture FAB (yellow, larger)
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(62.dp)
                     .clip(CircleShape)
-                    .background(NomoTerracotta)
-                    .border(3.dp, NomoWarmAmber, CircleShape)
+                    .background(NomoWarmAmber)
                     .clickable { onCaptureClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.CameraAlt,
+                    imageVector = Icons.Default.Add,
                     contentDescription = "Capture Memory",
-                    tint = NomoCream,
-                    modifier = Modifier.size(28.dp)
+                    tint = NomoDeepCharcoal,
+                    modifier = Modifier.size(32.dp)
                 )
             }
 
+            // Food tab
             NavItem(
-                label = "Trips",
-                icon = Icons.Default.Luggage,
-                isSelected = currentTab == "Trips",
-                onClick = { onTabSelected("Trips") }
+                label = "Food",
+                icon = Icons.Default.Restaurant,
+                isSelected = currentTab == "Food",
+                onClick = { onTabSelected("Food") }
             )
 
+            // Settings tab
             NavItem(
-                label = "Profile",
-                icon = Icons.Default.Person,
-                isSelected = currentTab == "Profile",
-                onClick = { onTabSelected("Profile") }
+                label = "Settings",
+                icon = Icons.Default.Settings,
+                isSelected = currentTab == "Settings",
+                onClick = { onTabSelected("Settings") }
             )
         }
     }
