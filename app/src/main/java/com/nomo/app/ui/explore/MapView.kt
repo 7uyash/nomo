@@ -178,25 +178,39 @@ private fun createCustomMarkerBitmap(
 }
 
 /**
- * Creates a bright glowing blue location marker pin for the user's current spot.
+ * Creates a yellow #FFC105 rounded square pin with a person emoji — "You Are Here" marker.
  */
 private fun createUserPinBitmap(): Bitmap {
-    val size = 70
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val size = 100
+    val bitmap = Bitmap.createBitmap(size, size + 20, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    // Outer translucent blue halo ring
-    paint.color = 0x55007AFF.toInt()
-    canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
+    // Yellow rounded square background
+    paint.color = 0xFFFFC105.toInt()
+    val bgRect = RectF(4f, 4f, size.toFloat() - 4f, size.toFloat() - 4f)
+    canvas.drawRoundRect(bgRect, 24f, 24f, paint)
 
-    // Middle solid white ring
+    // White inner circle
     paint.color = 0xFFFFFFFF.toInt()
-    canvas.drawCircle(size / 2f, size / 2f, size / 3.2f, paint)
+    canvas.drawCircle(size / 2f, size / 2f, size / 3f, paint)
 
-    // Core bright blue pin dot
-    paint.color = 0xFF007AFF.toInt()
-    canvas.drawCircle(size / 2f, size / 2f, size / 4.8f, paint)
+    // Pin pointer triangle at bottom
+    paint.color = 0xFFFFC105.toInt()
+    val path = android.graphics.Path().apply {
+        moveTo(size / 2f - 14f, size.toFloat() - 5f)
+        lineTo(size / 2f + 14f, size.toFloat() - 5f)
+        lineTo(size / 2f, size.toFloat() + 15f)
+        close()
+    }
+    canvas.drawPath(path, paint)
+
+    // Person emoji in the center
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        textSize = 36f
+        textAlign = Paint.Align.CENTER
+    }
+    canvas.drawText("🧍", size / 2f, size / 2f + 14f, textPaint)
 
     return bitmap
 }
