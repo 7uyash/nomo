@@ -4,9 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,26 +18,50 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.nomo.app.data.local.MemoryEntity
-import com.nomo.app.ui.components.FoodCategoryChip
-import com.nomo.app.ui.components.SyncStatusBadge
 import com.nomo.app.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineScreen(
     memories: List<MemoryEntity>,
     onMemoryClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Group memories by Month Year string
-    val groupedMemories = remember(memories) {
-        memories.groupBy { memory ->
-            SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(memory.timestamp))
+    // Current month state
+    var currentMonthCalendar by remember { mutableStateOf(Calendar.getInstance()) }
+    
+    // Bottom Sheet state
+    var selectedDateMemories by remember { mutableStateOf<List<MemoryEntity>?>(null) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val dateFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+    val monthYearText = dateFormat.format(currentMonthCalendar.time)
+
+    // Calculate days for the current month view
+    val (daysInMonth, firstDayOfWeek) = remember(currentMonthCalendar) {
+        val tempCal = currentMonthCalendar.clone() as Calendar
+        tempCal.set(Calendar.DAY_OF_MONTH, 1)
+        val firstDay = tempCal.get(Calendar.DAY_OF_WEEK)
+        val days = tempCal.getActualMaximum(Calendar.DAY_OF_MONTH)
+        Pair(days, firstDay)
+    }
+
+    // Group memories by day of month (for the current displayed month/year)
+    val memoriesByDay = remember(memories, currentMonthCalendar) {
+        val targetMonth = currentMonthCalendar.get(Calendar.MONTH)
+        val targetYear = currentMonthCalendar.get(Calendar.YEAR)
+        
+        memories.filter {
+            val memCal = Calendar.getInstance().apply { timeInMillis = it.timestamp }
+            memCal.get(Calendar.MONTH) == targetMonth && memCal.get(Calendar.YEAR) == targetYear
+        }.groupBy {
+            val memCal = Calendar.getInstance().apply { timeInMillis = it.timestamp }
+            memCal.get(Calendar.DAY_OF_MONTH)
         }
     }
 
@@ -42,182 +69,175 @@ fun TimelineScreen(
         modifier = modifier
             .fillMaxSize()
             .background(NomoCream)
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
     ) {
-        if (memories.isEmpty()) {
-            Column(
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Header: Month Navigation
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "📸 🍕 🗺️", fontSize = 48.sp)
-                Spacer(modifier = Modifier.height(16.dp))
+                IconButton(onClick = {
+                    val prev = currentMonthCalendar.clone() as Calendar
+                    prev.add(Calendar.MONTH, -1)
+                    currentMonthCalendar = prev
+                }) {
+                    Icon(Icons.Default.ChevronLeft, contentDescription = "Previous Month")
+                }
+                
                 Text(
-                    text = "Your memory timeline is empty",
-                    style = Typography.titleLarge,
-                    color = NomoDeepCharcoal
+                    text = monthYearText,
+                    style = Typography.headlineMedium,
+                    color = NomoDeepCharcoal,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Tap the camera button to capture your first place or food experience!",
-                    style = Typography.bodyLarge,
-                    color = NomoDeepCharcoal.copy(alpha = 0.7f)
-                )
+                
+                IconButton(onClick = {
+                    val next = currentMonthCalendar.clone() as Calendar
+                    next.add(Calendar.MONTH, 1)
+                    currentMonthCalendar = next
+                }) {
+                    Icon(Icons.Default.ChevronRight, contentDescription = "Next Month")
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    // Timeline Header Banner
-                    Card(
+
+            // Days of week header
+            Row(modifier = Modifier.fillMaxWidth()) {
+                val daysOfWeek = listOf("S", "M", "T", "W", "T", "F", "S")
+                daysOfWeek.forEach { day ->
+                    Text(
+                        text = day,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .border(2.dp, NomoTerracotta, RoundedCornerShape(20.dp)),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = NomoSurface)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "📖 My Life Diary",
-                                style = Typography.headlineMedium,
-                                color = NomoTerracotta
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "${memories.size} memories collected across places & dishes",
-                                style = Typography.bodyLarge,
-                                color = NomoDeepCharcoal.copy(alpha = 0.8f)
-                            )
+                            .weight(1f)
+                            .padding(bottom = 8.dp),
+                        style = Typography.bodyMedium,
+                        color = NomoSage,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+
+            // Calendar Grid
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(7),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Empty slots before the 1st of the month
+                val emptySlots = if (firstDayOfWeek == Calendar.SUNDAY) 0 else firstDayOfWeek - 1
+                items(emptySlots) {
+                    Spacer(modifier = Modifier.aspectRatio(1f))
+                }
+
+                // Days of the month
+                items(daysInMonth) { index ->
+                    val day = index + 1
+                    val dayMemories = memoriesByDay[day] ?: emptyList()
+                    
+                    CalendarDayCell(
+                        day = day,
+                        memories = dayMemories,
+                        onClick = {
+                            if (dayMemories.isNotEmpty()) {
+                                selectedDateMemories = dayMemories
+                            }
                         }
-                    }
+                    )
                 }
+            }
+        }
+    }
 
-                groupedMemories.forEach { (monthHeader, monthMemories) ->
-                    item {
-                        Text(
-                            text = monthHeader,
-                            style = Typography.titleLarge,
-                            color = NomoSage,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                    }
+    // Bottom Sheet for Dynamic Memory Grid
+    if (selectedDateMemories != null) {
+        val dateCal = currentMonthCalendar.clone() as Calendar
+        dateCal.set(Calendar.DAY_OF_MONTH, selectedDateMemories!!.first().let { 
+            Calendar.getInstance().apply { timeInMillis = it.timestamp }.get(Calendar.DAY_OF_MONTH)
+        })
+        val formattedDate = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(dateCal.time)
 
-                    items(monthMemories, key = { it.id }) { memory ->
-                        TimelineMemoryItem(
-                            memory = memory,
-                            onClick = { onMemoryClick(memory.id) }
-                        )
-                    }
-                }
+        ModalBottomSheet(
+            onDismissRequest = { selectedDateMemories = null },
+            sheetState = sheetState,
+            containerColor = NomoCream
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Memories on $formattedDate",
+                    style = Typography.titleLarge,
+                    color = NomoDeepCharcoal,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                DynamicMemoryGrid(
+                    memories = selectedDateMemories!!,
+                    onMemoryClick = onMemoryClick
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp)) // Padding for bottom nav
             }
         }
     }
 }
 
 @Composable
-private fun TimelineMemoryItem(
-    memory: MemoryEntity,
+private fun CalendarDayCell(
+    day: Int,
+    memories: List<MemoryEntity>,
     onClick: () -> Unit
 ) {
-    val dateFormatted = remember(memory.timestamp) {
-        SimpleDateFormat("EEE, MMM d · h:mm a", Locale.getDefault()).format(Date(memory.timestamp))
-    }
-
-    Card(
+    val hasMemories = memories.isNotEmpty()
+    
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp))
-            .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = NomoSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (hasMemories) NomoSurface else NomoCream.copy(alpha = 0.5f))
+            .border(
+                width = 1.dp,
+                color = if (hasMemories) NomoTerracotta.copy(alpha = 0.5f) else NomoCardBorder,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(enabled = hasMemories) { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Column {
-            Box {
-                AsyncImage(
-                    model = File(memory.photoPath),
-                    contentDescription = memory.placeName,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
-                    contentScale = ContentScale.Crop
-                )
+        if (hasMemories) {
+            // Photo Background
+            AsyncImage(
+                model = File(memories.first().photoPath),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                alpha = 0.7f // Dim slightly to make text readable
+            )
+            
+            // Dark gradient overlay for text readability
+            Box(modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.3f)))
+        }
 
-                // Category overlay chip
-                Box(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.TopStart)
-                ) {
-                    FoodCategoryChip(category = memory.category, isSelected = true)
-                }
-
-                // Sync status badge overlay
-                Box(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .align(Alignment.TopEnd)
-                ) {
-                    SyncStatusBadge(status = memory.syncStatus)
-                }
-            }
-
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = memory.dishName ?: memory.placeName,
-                        style = Typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = NomoDeepCharcoal,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    memory.foodVibe?.let { vibe ->
-                        Text(text = vibe, fontSize = 16.sp)
-                    }
-                }
-
-                if (!memory.dishName.isNull_or_empty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "📍 ${memory.placeName}",
-                        style = Typography.titleMedium,
-                        color = NomoTerracotta,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = dateFormatted,
-                    fontSize = 12.sp,
-                    color = NomoDeepCharcoal.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Medium
-                )
-
-                memory.note?.takeIf { it.isNotBlank() }?.let { noteText ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "“$noteText”",
-                        style = Typography.bodyMedium,
-                        color = NomoDeepCharcoal.copy(alpha = 0.85f),
-                        fontWeight = FontWeight.Normal
-                    )
-                }
-            }
+        Text(
+            text = day.toString(),
+            style = Typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = if (hasMemories) androidx.compose.ui.graphics.Color.White else NomoDeepCharcoal
+        )
+        
+        // Indicator dot for multiple memories
+        if (memories.size > 1) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 4.dp)
+                    .size(6.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(androidx.compose.ui.graphics.Color.White)
+            )
         }
     }
 }
-
-private fun String?.isNull_or_empty(): Boolean = this == null || this.isEmpty()
