@@ -129,6 +129,72 @@ fun ExploreScreen(
                         }
                     )
                 }
+
+                // Instant live search dropdown popup
+                if (searchQuery.isNotBlank()) {
+                    val dropdownMatches = remember(searchQuery, memories) {
+                        memories.filter { it.matchesSearch(searchQuery) }.take(6)
+                    }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = NomoSurface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    ) {
+                        if (dropdownMatches.isEmpty()) {
+                            Text(
+                                text = "No matching memories found for \"$searchQuery\"",
+                                fontSize = 13.sp,
+                                color = NomoDeepCharcoal.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(14.dp)
+                            )
+                        } else {
+                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                dropdownMatches.forEach { memory ->
+                                    val dateStr = java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.getDefault()).format(java.util.Date(memory.timestamp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                searchQuery = ""
+                                                showSearchField = false
+                                                onMemoryClick(memory.id)
+                                            }
+                                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        AsyncImage(
+                                            model = File(memory.photoPath),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(RoundedCornerShape(8.dp)),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = memory.dishName ?: memory.placeName,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = NomoDeepCharcoal,
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = "${memory.placeName} · $dateStr",
+                                                fontSize = 11.sp,
+                                                color = NomoSage,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // ── Time filter pill tabs ──────────────────────────────────────

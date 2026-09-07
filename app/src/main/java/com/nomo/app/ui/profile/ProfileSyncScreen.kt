@@ -4,15 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +33,8 @@ fun ProfileSyncScreen(
     onSyncNowClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val photoCount = memories.count { it.photoPath.isNotBlank() }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -37,110 +45,130 @@ fun ProfileSyncScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                // Header Banner
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(2.dp, NomoTerracotta, RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = NomoSurface)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = "⚙️ Settings & Storage",
-                            style = Typography.headlineMedium,
-                            color = NomoTerracotta
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Your memories belong to you. Saved directly on your device.",
-                            style = Typography.bodyLarge,
-                            color = NomoDeepCharcoal.copy(alpha = 0.8f)
-                        )
-                    }
-                }
-            }
-
-            // Local Gallery Album Info Card
+            // Header Banner Card
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp)),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = NomoSurface)
+                        .border(2.dp, NomoTerracotta, RoundedCornerShape(26.dp)),
+                    shape = RoundedCornerShape(26.dp),
+                    colors = CardDefaults.cardColors(containerColor = NomoSurface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+                    Column(modifier = Modifier.padding(22.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoLibrary,
-                                contentDescription = null,
-                                tint = NomoTerracotta,
-                                modifier = Modifier.size(28.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(NomoWarmAmber),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "⚙️", fontSize = 24.sp)
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Text(
-                                    text = "Device Gallery Album",
-                                    style = Typography.titleMedium,
+                                    text = "Settings & Storage",
+                                    style = Typography.headlineMedium,
+                                    color = NomoTerracotta,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Album Name: NOMO",
-                                    style = Typography.bodyMedium,
+                                    text = "Personal Vault & Device Sync",
+                                    fontSize = 13.sp,
                                     color = NomoDeepCharcoal.copy(alpha = 0.7f)
                                 )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-                        HorizontalDivider(color = NomoCardBorder)
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = null,
-                                tint = NomoSage,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Pictures/NOMO on device storage",
-                                style = Typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = NomoSage
-                            )
-                        }
                     }
                 }
             }
 
-            // Storage Stats
+            // Local Gallery Album & Storage Card
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp)),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = NomoSurface)
+                        .border(1.5.dp, NomoCardBorder, RoundedCornerShape(22.dp)),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = NomoSurface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Storage Summary",
+                            text = "📸 Local Gallery & Album Status",
                             style = Typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
                             color = NomoDeepCharcoal
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Album Pill Status Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoLibrary,
+                                    contentDescription = null,
+                                    tint = NomoTerracotta,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Gallery Album: NOMO",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = NomoDeepCharcoal
+                                    )
+                                    Text(
+                                        text = "Pictures/NOMO folder",
+                                        fontSize = 12.sp,
+                                        color = NomoDeepCharcoal.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFE8F5E9), RoundedCornerShape(12.dp))
+                                    .border(1.dp, NomoSage, RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = NomoSage,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Active",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = NomoSage
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        HorizontalDivider(color = NomoCardBorder.copy(alpha = 0.6f))
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Storage Counts
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            StatBox(title = "Total Memories", count = memories.size, color = NomoTerracotta)
-                            StatBox(title = "Photos Saved", count = memories.count { it.photoPath.isNotBlank() }, color = NomoSage)
+                            StatCard(title = "Memories Saved", count = memories.size, icon = "📌", color = NomoTerracotta)
+                            StatCard(title = "Photos in Album", count = photoCount, icon = "🖼️", color = NomoSage)
                         }
                     }
                 }
@@ -151,34 +179,85 @@ fun ProfileSyncScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(2.dp, NomoSage, RoundedCornerShape(20.dp)),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = NomoSurface)
+                        .border(2.dp, NomoSage, RoundedCornerShape(22.dp)),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = NomoSurface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(18.dp),
+                        modifier = Modifier.padding(20.dp),
                         verticalAlignment = Alignment.Top
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Lock,
+                            imageVector = Icons.Default.Security,
                             contentDescription = "Privacy Guarantee",
                             tint = NomoSage,
                             modifier = Modifier.size(32.dp)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(14.dp))
                         Column {
                             Text(
-                                text = "Privacy-First Architecture",
+                                text = "100% On-Device Storage",
                                 style = Typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = NomoSage
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "NOMO stores your photos and location history exclusively on your local device. No central company database ever sees your personal life map.",
+                                text = "Your photos, locations, and personal notes are saved exclusively on your phone. No central company database ever accesses your private life map.",
                                 style = Typography.bodyMedium,
-                                color = NomoDeepCharcoal.copy(alpha = 0.85f)
+                                color = NomoDeepCharcoal.copy(alpha = 0.85f),
+                                lineHeight = 18.sp
                             )
+                        }
+                    }
+                }
+            }
+
+            // App Information & About Footer Card
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.5.dp, NomoCardBorder, RoundedCornerShape(22.dp)),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = NomoSurface)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = NomoDeepCharcoal.copy(alpha = 0.7f),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "About NOMO",
+                                style = Typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = NomoDeepCharcoal
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "App Version", fontSize = 13.sp, color = NomoDeepCharcoal.copy(alpha = 0.7f))
+                            Text(text = "v1.0.0 (Local Vault)", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = NomoDeepCharcoal)
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Storage Engine", fontSize = 13.sp, color = NomoDeepCharcoal.copy(alpha = 0.7f))
+                            Text(text = "Android Room + MediaStore", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = NomoTerracotta)
                         }
                     }
                 }
@@ -188,15 +267,20 @@ fun ProfileSyncScreen(
 }
 
 @Composable
-private fun StatBox(title: String, count: Int, color: androidx.compose.ui.graphics.Color) {
+private fun StatCard(title: String, count: Int, icon: String, color: Color) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(NomoCream, RoundedCornerShape(14.dp))
-            .border(1.dp, NomoCardBorder, RoundedCornerShape(14.dp))
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .background(NomoCream, RoundedCornerShape(16.dp))
+            .border(1.dp, NomoCardBorder, RoundedCornerShape(16.dp))
+            .padding(horizontal = 22.dp, vertical = 12.dp)
     ) {
-        Text(text = "$count", fontSize = 22.sp, fontWeight = FontWeight.Black, color = color)
-        Text(text = title, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = NomoDeepCharcoal)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = icon, fontSize = 18.sp)
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text = "$count", fontSize = 22.sp, fontWeight = FontWeight.Black, color = color)
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(text = title, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = NomoDeepCharcoal)
     }
 }
