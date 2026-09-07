@@ -76,26 +76,16 @@ fun NomoTopBar(
                 )
             }
 
-            // Profile / Sync avatar circle
-            BadgedBox(
-                badge = {
-                    if (pendingSyncCount > 0) {
-                        Badge(containerColor = NomoWarmAmber) {
-                            Text(text = "$pendingSyncCount", color = NomoDeepCharcoal, fontSize = 9.sp)
-                        }
-                    }
-                }
+            // Profile / Settings avatar circle
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(NomoDeepCharcoal)
+                    .clickable { onProfileSyncClick() },
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(NomoDeepCharcoal)
-                        .clickable { onProfileSyncClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "👤", fontSize = 18.sp)
-                }
+                Text(text = "👤", fontSize = 18.sp)
             }
         }
     }

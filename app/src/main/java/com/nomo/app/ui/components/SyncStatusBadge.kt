@@ -20,14 +20,7 @@ fun SyncStatusBadge(
     status: SyncStatus,
     modifier: Modifier = Modifier
 ) {
-    val (label, bgColor, textColor, icon) = when (status) {
-        SyncStatus.LOCAL_ONLY -> Quadruple("Saved Locally", NomoCream, SyncLocalGray, "🕒")
-        SyncStatus.QUEUED -> Quadruple("Waiting to Sync", Color(0xFFFFF3E0), SyncQueuedAmber, "⏳")
-        SyncStatus.UPLOADING -> Quadruple("Syncing to Drive", Color(0xE3E3F2FD), SyncUploadingBlue, "🔄")
-        SyncStatus.SYNCED -> Quadruple("Synced", Color(0xFFE8F5E9), SyncSyncedGreen, "☁️")
-        SyncStatus.UPLOAD_FAILED -> Quadruple("Sync Failed", Color(0xFFFFEBEE), SyncFailedRed, "⚠️")
-        SyncStatus.RETRY_QUEUED -> Quadruple("Retry Queued", Color(0xFFFFF8E1), SyncQueuedAmber, "🔁")
-    }
+    val (label, bgColor, textColor, icon) = Quadruple("Saved to Device", NomoCream, SyncLocalGray, "📱")
 
     Row(
         modifier = modifier
