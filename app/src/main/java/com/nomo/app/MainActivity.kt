@@ -309,7 +309,7 @@ class MainActivity : ComponentActivity() {
                 if (showCaptureSheet && capturedBitmap != null && capturedPhotoPath != null) {
                     QuickCaptureBottomSheet(
                         photoBitmap = capturedBitmap!!,
-                        initialPlaceName = "My Experienced Place",
+                        initialPlaceName = capturedPlaceName,
                         latitude = capturedLat,
                         longitude = capturedLon,
                         availableTrips = trips,

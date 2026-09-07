@@ -19,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Luggage
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nomo.app.data.local.TripEntity
-import com.nomo.app.ui.components.FoodCategoryChip
 import com.nomo.app.ui.theme.*
 
 @Composable
@@ -54,23 +52,13 @@ fun QuickCaptureBottomSheet(
     onDismiss: () -> Unit = {}
 ) {
     var dishName by remember { mutableStateOf("") }
-    var placeName by remember { mutableStateOf(initialPlaceName.ifBlank { "My Experience Spot" }) }
-    var selectedCategory by remember { mutableStateOf("Food") }
-    var selectedVibe by remember { mutableStateOf("⭐ Loved It") }
+    val placeName by remember { mutableStateOf(initialPlaceName.ifBlank { "Captured Location" }) }
     var note by remember { mutableStateOf("") }
     var selectedTripId by remember { mutableStateOf<String?>(null) }
 
     var isEditing by remember { mutableStateOf(false) }
 
-    val categories = listOf("Food", "Cafe", "Travel", "Event", "Shopping", "Personal")
-    
-    val vibes = when (selectedCategory) {
-        "Food" -> listOf("🍕 Super Tasty", "😋 Yum", "🌶️ Spicy", "🍰 Sweet", "🍷 Chill", "⭐ Loved It")
-        "Cafe" -> listOf("☕ Cozy & Chill", "🍰 Sweet Treat", "📖 Quiet Corner", "⭐ Loved It")
-        "Travel" -> listOf("📸 Scenic View", "🌅 Sunset Spot", "🏞️ Epic Place", "⭐ Loved It")
-        "Event" -> listOf("🎉 Fun Vibe", "🎵 Great Music", "✨ Magical", "⭐ Loved It")
-        else -> listOf("⭐ Loved It", "☕ Cozy", "📸 Scenic", "🎉 Fun Vibe", "🧘 Peaceful")
-    }
+    val displayTitle = if (dishName.isNotBlank()) dishName else "Memory Title"
 
     Card(
         modifier = Modifier
@@ -87,7 +75,7 @@ fun QuickCaptureBottomSheet(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Drag Indicator
+            // Drag Indicator Handle
             Box(
                 modifier = Modifier
                     .width(38.dp)
@@ -98,7 +86,7 @@ fun QuickCaptureBottomSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Main Info Header Row
+            // Main Post-Picture Card Header Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -116,8 +104,12 @@ fun QuickCaptureBottomSheet(
 
                 Spacer(modifier = Modifier.width(14.dp))
 
-                // Metadata Column
-                Column(modifier = Modifier.weight(1f)) {
+                // Title & Subtitle Column (Clickable to open edit mode)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { isEditing = !isEditing }
+                ) {
                     Text(
                         text = "READY TO SAVE",
                         fontSize = 11.sp,
@@ -129,26 +121,27 @@ fun QuickCaptureBottomSheet(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = if (dishName.isNotBlank()) dishName else placeName,
+                        text = displayTitle,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
-                        color = NomoDeepCharcoal,
+                        color = if (dishName.isNotBlank()) NomoDeepCharcoal else NomoDeepCharcoal.copy(alpha = 0.45f),
                         maxLines = 1
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = "$selectedCategory · Today · Private",
+                        text = "$placeName · Today · Private",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = NomoDeepCharcoal.copy(alpha = 0.6f)
+                        color = NomoDeepCharcoal.copy(alpha = 0.6f),
+                        maxLines = 1
                     )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Edit Button (Pencil Icon)
+                // Right Edit Pencil Button
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -159,14 +152,14 @@ fun QuickCaptureBottomSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit details",
+                        contentDescription = "Edit memory title and note",
                         tint = NomoDeepCharcoal,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
 
-            // Expanded Edit Options (Toggled via Pencil Button)
+            // Expanded Edit Mode (Title, Optional Note, and Trip tagger)
             AnimatedVisibility(
                 visible = isEditing,
                 enter = fadeIn() + expandVertically(),
@@ -184,112 +177,32 @@ fun QuickCaptureBottomSheet(
                     OutlinedTextField(
                         value = dishName,
                         onValueChange = { dishName = it },
-                        label = { Text("Title / Memory Name", fontSize = 12.sp) },
-                        placeholder = { Text("e.g. Majnu chai stop, Cold Coffee", fontSize = 11.sp) },
+                        label = { Text("Memory Title", fontSize = 12.sp) },
+                        placeholder = { Text("Enter a title for this memory...", fontSize = 11.sp) },
                         singleLine = true,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Location Spot Input
+                    // Optional Memory Note Input
                     OutlinedTextField(
-                        value = placeName,
-                        onValueChange = { placeName = it },
-                        label = { Text("Location / Place Name", fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = NomoTerracotta, modifier = Modifier.size(18.dp)) },
-                        singleLine = true,
+                        value = note,
+                        onValueChange = { note = it },
+                        label = { Text("Add Note / Highlight (Optional)", fontSize = 12.sp) },
+                        placeholder = { Text("Write personal details, story, or recommendations...", fontSize = 11.sp) },
+                        maxLines = 3,
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Category Selector
-                    Text(
-                        text = "Category",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = NomoDeepCharcoal
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        categories.forEach { cat ->
-                            FoodCategoryChip(
-                                category = cat,
-                                isSelected = selectedCategory == cat,
-                                onClick = {
-                                    selectedCategory = cat
-                                    selectedVibe = when (cat) {
-                                        "Food" -> "🍕 Super Tasty"
-                                        "Cafe" -> "☕ Cozy & Chill"
-                                        "Travel" -> "📸 Scenic View"
-                                        "Event" -> "🎉 Fun Vibe"
-                                        else -> "⭐ Loved It"
-                                    }
-                                }
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Vibe Selector
-                    Text(
-                        text = "Mood / Vibe",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = NomoDeepCharcoal
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        vibes.forEach { vibe ->
-                            val isSelected = selectedVibe == vibe
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        if (isSelected) NomoWarmAmber else NomoCream,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                    .border(
-                                        1.5.dp,
-                                        if (isSelected) NomoTerracotta else NomoCardBorder,
-                                        RoundedCornerShape(12.dp)
-                                    )
-                                    .clickable { selectedVibe = vibe }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = vibe,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = NomoDeepCharcoal
-                                )
-                            }
-                        }
-                    }
-
-                    // Trip Tagging (if available)
+                    // Optional Trip Tagger (if trips exist)
                     if (availableTrips.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Add to Trip",
+                            text = "Add to Trip Collection (Optional)",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = NomoDeepCharcoal
@@ -340,19 +253,6 @@ fun QuickCaptureBottomSheet(
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    // Personal Note Field
-                    OutlinedTextField(
-                        value = note,
-                        onValueChange = { note = it },
-                        label = { Text("Add Note / Story", fontSize = 12.sp) },
-                        placeholder = { Text("Write personal thoughts or tips...", fontSize = 11.sp) },
-                        maxLines = 2,
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 
@@ -389,8 +289,8 @@ fun QuickCaptureBottomSheet(
                         onSaveMemory(
                             dishName,
                             placeName,
-                            selectedVibe,
-                            selectedCategory,
+                            "",          // No food vibe UI
+                            "Personal",  // Default category
                             note,
                             selectedTripId
                         )
