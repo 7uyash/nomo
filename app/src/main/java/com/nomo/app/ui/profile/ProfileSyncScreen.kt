@@ -8,9 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
@@ -43,12 +41,12 @@ fun ProfileSyncScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Banner Card
+            // Header Banner Card with Warm Amber/Yellow accent
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(2.dp, NomoTerracotta, RoundedCornerShape(26.dp)),
+                        .border(2.dp, NomoWarmAmber, RoundedCornerShape(26.dp)),
                     shape = RoundedCornerShape(26.dp),
                     colors = CardDefaults.cardColors(containerColor = NomoSurface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
@@ -69,7 +67,7 @@ fun ProfileSyncScreen(
                                 Text(
                                     text = "Settings & Storage",
                                     style = Typography.headlineMedium,
-                                    color = NomoTerracotta,
+                                    color = Color(0xFFD49200),
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
@@ -113,7 +111,7 @@ fun ProfileSyncScreen(
                                 Icon(
                                     imageVector = Icons.Default.PhotoLibrary,
                                     contentDescription = null,
-                                    tint = NomoTerracotta,
+                                    tint = Color(0xFFD49200),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
@@ -242,7 +240,7 @@ fun ProfileSyncScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(text = "Storage Engine", fontSize = 13.sp, color = NomoDeepCharcoal.copy(alpha = 0.7f))
-                            Text(text = "Android Room + MediaStore", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = NomoTerracotta)
+                            Text(text = "Android Room + MediaStore", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFFD49200))
                         }
                     }
                 }
