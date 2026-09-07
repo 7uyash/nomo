@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
         var capturedPhotoPath by remember { mutableStateOf<String?>(null) }
         var capturedLat by remember { mutableStateOf(28.6139) }
         var capturedLon by remember { mutableStateOf(77.2090) }
+        var capturedPlaceName by remember { mutableStateOf("Captured Location") }
         var showCaptureSheet by remember { mutableStateOf(false) }
 
         // Resurfacing memory states
@@ -165,12 +166,14 @@ class MainActivity : ComponentActivity() {
                     val loc = locationHelper.getCurrentLocation()
                     val lat = loc?.latitude ?: 28.6139
                     val lon = loc?.longitude ?: 77.2090
+                    val place = locationHelper.getPlaceName(lat, lon)
 
                     val bitmap = BitmapFactory.decodeFile(currentPhotoFile!!.absolutePath)
                     capturedBitmap = bitmap
                     capturedPhotoPath = currentPhotoFile!!.absolutePath
                     capturedLat = lat
                     capturedLon = lon
+                    capturedPlaceName = place
                     showCaptureSheet = true
                 }
             }

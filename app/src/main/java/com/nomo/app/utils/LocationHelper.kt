@@ -82,4 +82,29 @@ class LocationHelper(private val context: Context) {
         // 4. Last resort: return any stale cached location regardless of age
         return gpsCached ?: netCached
     }
+
+    /**
+     * Reverse-geocodes latitude and longitude into a user-friendly place name.
+     */
+    fun getPlaceName(latitude: Double, longitude: Double): String {
+        return try {
+            val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
+            @Suppress("DEPRECATION")
+            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val address = addresses[0]
+                val feature = address.featureName ?: address.locality ?: address.subAdminArea
+                val locality = address.locality
+                if (feature != null && locality != null && feature != locality) {
+                    "$feature, $locality"
+                } else {
+                    feature ?: locality ?: "Captured Location"
+                }
+            } else {
+                "Captured Location"
+            }
+        } catch (e: Exception) {
+            "Captured Location"
+        }
+    }
 }
