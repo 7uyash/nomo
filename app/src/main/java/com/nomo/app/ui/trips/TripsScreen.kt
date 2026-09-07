@@ -10,7 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Luggage
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.nomo.app.data.local.MemoryEntity
 import com.nomo.app.data.local.TripEntity
+import com.nomo.app.data.local.matchesSearch
 import com.nomo.app.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -39,6 +42,20 @@ fun TripsScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var newTripName by remember { mutableStateOf("") }
     var newTripDesc by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredTrips = remember(trips, memories, searchQuery) {
+        if (searchQuery.isBlank()) trips
+        else {
+            val q = searchQuery.trim().lowercase()
+            trips.filter { trip ->
+                val tripMemories = memories.filter { it.tripId == trip.id }
+                trip.name.lowercase().contains(q) ||
+                        (trip.description?.lowercase()?.contains(q) == true) ||
+                        tripMemories.any { it.matchesSearch(searchQuery) }
+            }
+        }
+    }
 
     Box(
         modifier = modifier
@@ -48,7 +65,7 @@ fun TripsScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
                 // Header & Create Trip Button
@@ -82,12 +99,38 @@ fun TripsScreen(
                 }
             }
 
-            if (trips.isEmpty()) {
+            // Search Bar
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search trips, locations, notes...", fontSize = 13.sp) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = NomoTerracotta) },
+                    trailingIcon = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Clear search", tint = NomoDeepCharcoal)
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = NomoWarmAmber,
+                        unfocusedBorderColor = NomoCardBorder,
+                        focusedContainerColor = NomoSurface,
+                        unfocusedContainerColor = NomoSurface
+                    )
+                )
+            }
+
+            if (filteredTrips.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 24.dp)
+                            .padding(top = 16.dp)
                             .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp)),
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = NomoSurface)
@@ -99,7 +142,7 @@ fun TripsScreen(
                             Text(text = "🗺️ ✈️", fontSize = 40.sp)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "No trips created yet",
+                                text = if (searchQuery.isNotBlank()) "No trips match \"$searchQuery\"" else "No trips created yet",
                                 style = Typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -113,7 +156,7 @@ fun TripsScreen(
                     }
                 }
             } else {
-                items(trips, key = { it.id }) { trip ->
+                items(filteredTrips, key = { it.id }) { trip ->
                     val tripMemories = memories.filter { it.tripId == trip.id }
                     TripItemCard(
                         trip = trip,

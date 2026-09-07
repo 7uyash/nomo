@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.nomo.app.data.local.MemoryEntity
+import com.nomo.app.data.local.matchesSearch
 import com.nomo.app.ui.components.NomoTopBar
 import com.nomo.app.ui.components.OnThisDayBanner
 import com.nomo.app.ui.components.ResurfacingBanner
@@ -69,10 +70,7 @@ fun ExploreScreen(
         }
         memories.filter { memory ->
             val matchesTime = memory.timestamp >= cutoff
-            val matchesSearch = searchQuery.isBlank() ||
-                    memory.placeName.contains(searchQuery, ignoreCase = true) ||
-                    (memory.dishName?.contains(searchQuery, ignoreCase = true) == true) ||
-                    (memory.note?.contains(searchQuery, ignoreCase = true) == true)
+            val matchesSearch = memory.matchesSearch(searchQuery)
             matchesTime && matchesSearch
         }
     }

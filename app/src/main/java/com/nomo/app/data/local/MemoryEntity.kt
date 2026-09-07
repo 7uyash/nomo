@@ -23,3 +23,31 @@ data class MemoryEntity(
     val driveJsonId: String? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+fun MemoryEntity.matchesSearch(query: String): Boolean {
+    if (query.isBlank()) return true
+    val q = query.trim().lowercase()
+
+    // 1. Place / Location Name
+    if (placeName.lowercase().contains(q)) return true
+    // 2. Memory Title / Dish Name
+    if (dishName?.lowercase()?.contains(q) == true) return true
+    // 3. Personal Notes & Highlights
+    if (note?.lowercase()?.contains(q) == true) return true
+    // 4. Category
+    if (category.lowercase().contains(q)) return true
+    // 5. Food Vibe / Mood
+    if (foodVibe?.lowercase()?.contains(q) == true) return true
+
+    // 6. Formatted Date (Month, Day of month, Year, Day of week)
+    try {
+        val dateStr = java.text.SimpleDateFormat("EEEE MMMM d yyyy MMM", java.util.Locale.getDefault()).format(java.util.Date(timestamp)).lowercase()
+        if (dateStr.contains(q)) return true
+    } catch (_: Exception) {}
+
+    // 7. Coordinates
+    val coordsStr = "%.4f %.4f".format(latitude, longitude)
+    if (coordsStr.contains(q)) return true
+
+    return false
+}
