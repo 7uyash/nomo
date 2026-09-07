@@ -1,7 +1,14 @@
 package com.nomo.app.data.repository
 
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.work.*
 import com.nomo.app.data.local.MemoryDao
 import com.nomo.app.data.local.MemoryEntity
@@ -53,6 +60,49 @@ class MemoryRepository(private val context: Context) {
         photoFile.absolutePath
     }
 
+    suspend fun savePhotoToPublicGallery(bitmap: Bitmap): String? = withContext(Dispatchers.IO) {
+        val filename = "NOMO_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(6)}.jpg"
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/NOMO")
+                }
+                val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                if (uri != null) {
+                    context.contentResolver.openOutputStream(uri)?.use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out)
+                    }
+                    return@withContext uri.toString()
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val nomoFolder = File(picturesDir, "NOMO").apply { if (!exists()) mkdirs() }
+                val destFile = File(nomoFolder, filename)
+                FileOutputStream(destFile).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out)
+                }
+                MediaScannerConnection.scanFile(context, arrayOf(destFile.absolutePath), arrayOf("image/jpeg"), null)
+                return@withContext destFile.absolutePath
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        null
+    }
+
+    suspend fun exportPhotoFileToPublicGallery(photoPath: String) = withContext(Dispatchers.IO) {
+        val file = File(photoPath)
+        if (file.exists()) {
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            if (bitmap != null) {
+                savePhotoToPublicGallery(bitmap)
+            }
+        }
+    }
+
     suspend fun createAndSaveMemory(
         photoPath: String,
         latitude: Double,
@@ -64,6 +114,8 @@ class MemoryRepository(private val context: Context) {
         note: String?,
         tripId: String?
     ): MemoryEntity = withContext(Dispatchers.IO) {
+        exportPhotoFileToPublicGallery(photoPath)
+
         val memory = MemoryEntity(
             photoPath = photoPath,
             latitude = latitude,
