@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
@@ -49,6 +50,7 @@ fun QuickCaptureBottomSheet(
         note: String,
         selectedTripId: String?
     ) -> Unit,
+    onCreateAlbum: (name: String) -> Unit = {},
     onDismiss: () -> Unit = {}
 ) {
     var dishName by remember { mutableStateOf("") }
@@ -57,6 +59,8 @@ fun QuickCaptureBottomSheet(
     var selectedTripId by remember { mutableStateOf<String?>(null) }
 
     var isEditing by remember { mutableStateOf(false) }
+    var showNewFolderField by remember { mutableStateOf(false) }
+    var newFolderName by remember { mutableStateOf("") }
 
     val displayTitle = if (dishName.isNotBlank()) dishName else "Memory Title"
 
@@ -201,58 +205,132 @@ fun QuickCaptureBottomSheet(
                 }
             }
 
-            // Add to Album / Folder Selector
-            if (availableTrips.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(14.dp))
+            // Add to Album / Folder Selector — always visible
+            Spacer(modifier = Modifier.height(14.dp))
 
-                Text(
-                    text = "Add to Album / Folder",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = NomoDeepCharcoal,
-                    modifier = Modifier.align(Alignment.Start)
-                )
+            Text(
+                text = "Add to Album",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = NomoDeepCharcoal,
+                modifier = Modifier.align(Alignment.Start)
+            )
 
-                Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Existing albums
+                availableTrips.forEach { trip ->
+                    val isSelected = selectedTripId == trip.id
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                if (isSelected) NomoSage else NomoCream,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .border(
+                                1.5.dp,
+                                if (isSelected) NomoTerracotta else NomoCardBorder,
+                                RoundedCornerShape(12.dp)
+                            )
+                            .clickable { selectedTripId = if (isSelected) null else trip.id }
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Folder,
+                                contentDescription = null,
+                                tint = if (isSelected) NomoCream else NomoTerracotta,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = trip.name,
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) NomoCream else NomoDeepCharcoal
+                            )
+                        }
+                    }
+                }
+
+                // + New Folder chip
+                Box(
+                    modifier = Modifier
+                        .background(
+                            if (showNewFolderField) NomoWarmAmber.copy(alpha = 0.15f) else NomoCream,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .border(
+                            1.5.dp,
+                            if (showNewFolderField) NomoWarmAmber else NomoCardBorder,
+                            RoundedCornerShape(12.dp)
+                        )
+                        .clickable { showNewFolderField = !showNewFolderField }
+                        .padding(horizontal = 12.dp, vertical = 7.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Create new folder",
+                            tint = NomoDeepCharcoal.copy(alpha = 0.7f),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "New Folder",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = NomoDeepCharcoal.copy(alpha = 0.75f)
+                        )
+                    }
+                }
+            }
+
+            // Inline new folder text field
+            AnimatedVisibility(
+                visible = showNewFolderField,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    availableTrips.forEach { trip ->
-                        val isSelected = selectedTripId == trip.id
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    if (isSelected) NomoSage else NomoCream,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .border(
-                                    1.5.dp,
-                                    if (isSelected) NomoTerracotta else NomoCardBorder,
-                                    RoundedCornerShape(12.dp)
-                                )
-                                .clickable { selectedTripId = if (isSelected) null else trip.id }
-                                .padding(horizontal = 12.dp, vertical = 7.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Folder,
-                                    contentDescription = null,
-                                    tint = if (isSelected) NomoCream else NomoTerracotta,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = trip.name,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) NomoCream else NomoDeepCharcoal
-                                )
+                    OutlinedTextField(
+                        value = newFolderName,
+                        onValueChange = { newFolderName = it },
+                        label = { Text("Folder name", fontSize = 12.sp) },
+                        placeholder = { Text("e.g. Momos, Best Places...", fontSize = 11.sp) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(
+                        onClick = {
+                            if (newFolderName.isNotBlank()) {
+                                onCreateAlbum(newFolderName.trim())
+                                newFolderName = ""
+                                showNewFolderField = false
                             }
-                        }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NomoWarmAmber,
+                            contentColor = NomoDeepCharcoal
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Text("Create", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }

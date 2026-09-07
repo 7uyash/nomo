@@ -62,6 +62,7 @@ import com.nomo.app.ui.theme.NomoWarmAmber
 import com.nomo.app.ui.theme.Typography
 import com.nomo.app.ui.timeline.TimelineScreen
 import com.nomo.app.ui.trips.TripsScreen
+import com.nomo.app.ui.trips.AlbumDetailScreen
 import com.nomo.app.utils.LocationHelper
 import kotlinx.coroutines.launch
 import java.io.File
@@ -90,6 +91,7 @@ class MainActivity : ComponentActivity() {
         var currentTab by remember { mutableStateOf("Map") }
         var selectedDetailMemoryId by remember { mutableStateOf<String?>(null) }
         var selectedTripFilterId by remember { mutableStateOf<String?>(null) }
+        var selectedAlbumId by remember { mutableStateOf<String?>(null) }
 
         val memories by repository.allMemoriesFlow.collectAsState(initial = emptyList())
         val trips by repository.allTripsFlow.collectAsState(initial = emptyList())
@@ -240,10 +242,13 @@ class MainActivity : ComponentActivity() {
 
         Scaffold(
             bottomBar = {
-                if (selectedDetailMemoryId == null) {
+                if (selectedDetailMemoryId == null && selectedAlbumId == null) {
                     NomoBottomNavBar(
                         currentTab = currentTab,
-                        onTabSelected = { currentTab = it },
+                        onTabSelected = {
+                            selectedAlbumId = null
+                            currentTab = it
+                        },
                         onCaptureClick = { requestPermissionsAndCapture() }
                     )
                 }
@@ -251,6 +256,7 @@ class MainActivity : ComponentActivity() {
             containerColor = NomoCream
         ) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                val albumTrip = if (selectedAlbumId != null) trips.find { it.id == selectedAlbumId } else null
                 if (detailMemory != null) {
                     val nearbyMemories = memories.filter { it.id != detailMemory.id }.take(5)
                     MemoryDetailScreen(
@@ -263,6 +269,14 @@ class MainActivity : ComponentActivity() {
                                 selectedDetailMemoryId = null
                             }
                         },
+                        onMemoryClick = { id -> selectedDetailMemoryId = id }
+                    )
+                } else if (albumTrip != null) {
+                    val albumMemories = memories.filter { it.tripId == albumTrip.id }
+                    AlbumDetailScreen(
+                        trip = albumTrip,
+                        memories = albumMemories,
+                        onBackClick = { selectedAlbumId = null },
                         onMemoryClick = { id -> selectedDetailMemoryId = id }
                     )
                 } else {
@@ -287,8 +301,7 @@ class MainActivity : ComponentActivity() {
                             trips = trips,
                             memories = memories,
                             onTripClick = { tripId ->
-                                selectedTripFilterId = tripId
-                                currentTab = "Timeline"
+                                selectedAlbumId = tripId
                             },
                             onCreateTripClick = { name, desc ->
                                 lifecycleScope.launch {
@@ -328,7 +341,12 @@ class MainActivity : ComponentActivity() {
                                     tripId = tripId
                                 )
                                 showCaptureSheet = false
-                                Toast.makeText(applicationContext, "Memory saved to your map! 🍕📍", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(applicationContext, "Memory saved!", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onCreateAlbum = { albumName ->
+                            lifecycleScope.launch {
+                                repository.createTrip(albumName, "", null)
                             }
                         },
                         onDismiss = { showCaptureSheet = false }
