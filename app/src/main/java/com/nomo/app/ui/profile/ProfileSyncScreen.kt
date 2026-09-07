@@ -33,8 +33,6 @@ fun ProfileSyncScreen(
     onSyncNowClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val photoCount = memories.count { it.photoPath.isNotBlank() }
-
     Box(
         modifier = modifier
             .fillMaxSize()
