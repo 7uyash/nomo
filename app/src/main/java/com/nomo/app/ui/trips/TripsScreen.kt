@@ -4,15 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Luggage
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,11 +24,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.nomo.app.data.local.MemoryEntity
 import com.nomo.app.data.local.TripEntity
-import com.nomo.app.data.local.matchesSearch
 import com.nomo.app.ui.theme.*
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun TripsScreen(
@@ -42,150 +38,116 @@ fun TripsScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var newTripName by remember { mutableStateOf("") }
     var newTripDesc by remember { mutableStateOf("") }
-    var searchQuery by remember { mutableStateOf("") }
-
-    val filteredTrips = remember(trips, memories, searchQuery) {
-        if (searchQuery.isBlank()) trips
-        else {
-            val q = searchQuery.trim().lowercase()
-            trips.filter { trip ->
-                val tripMemories = memories.filter { it.tripId == trip.id }
-                trip.name.lowercase().contains(q) ||
-                        (trip.description?.lowercase()?.contains(q) == true) ||
-                        tripMemories.any { it.matchesSearch(searchQuery) }
-            }
-        }
-    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(NomoCream)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            item {
-                // Header & Create Trip Button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // Header & Create Album Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "📁 Albums & Folders",
+                        style = Typography.headlineMedium,
+                        color = NomoTerracotta,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Organize photos into Momos, Noodles, Best Places...",
+                        style = Typography.bodyMedium,
+                        color = NomoDeepCharcoal.copy(alpha = 0.7f)
+                    )
+                }
+
+                Button(
+                    onClick = { showCreateDialog = true },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = NomoWarmAmber)
                 ) {
-                    Column {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = NomoDeepCharcoal)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("New Album", color = NomoDeepCharcoal, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (trips.isEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                        .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp)),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = NomoSurface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "📁 🥟 🍜", fontSize = 40.sp)
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "🧳 Trip Journeys",
-                            style = Typography.headlineMedium,
-                            color = NomoTerracotta
+                            text = "No custom albums yet",
+                            style = Typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Group your food & travel memories into trips",
+                            text = "Tap 'New Album' to create folders like Momos, Noodles, Best Places, or Food Finds!",
                             style = Typography.bodyMedium,
                             color = NomoDeepCharcoal.copy(alpha = 0.7f)
                         )
                     }
-
-                    Button(
-                        onClick = { showCreateDialog = true },
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = NomoWarmAmber)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = NomoDeepCharcoal)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("New Trip", color = NomoDeepCharcoal, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-
-            // Search Bar
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search trips, locations, notes...", fontSize = 13.sp) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = NomoTerracotta) },
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear search", tint = NomoDeepCharcoal)
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = NomoWarmAmber,
-                        unfocusedBorderColor = NomoCardBorder,
-                        focusedContainerColor = NomoSurface,
-                        unfocusedContainerColor = NomoSurface
-                    )
-                )
-            }
-
-            if (filteredTrips.isEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                            .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp)),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = NomoSurface)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "🗺️ ✈️", fontSize = 40.sp)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = if (searchQuery.isNotBlank()) "No trips match \"$searchQuery\"" else "No trips created yet",
-                                style = Typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Create a trip (like 'Jaipur Food Weekend' or 'Goa Beach Cafe Hop') to organize your map memories!",
-                                style = Typography.bodyMedium,
-                                color = NomoDeepCharcoal.copy(alpha = 0.7f)
-                            )
-                        }
-                    }
                 }
             } else {
-                items(filteredTrips, key = { it.id }) { trip ->
-                    val tripMemories = memories.filter { it.tripId == trip.id }
-                    TripItemCard(
-                        trip = trip,
-                        memoriesCount = tripMemories.size,
-                        coverPhotoPath = trip.coverPhotoPath ?: tripMemories.firstOrNull()?.photoPath,
-                        onClick = { onTripClick(trip.id) }
-                    )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(trips, key = { it.id }) { trip ->
+                        val tripMemories = memories.filter { it.tripId == trip.id }
+                        AlbumFolderCard(
+                            trip = trip,
+                            memoriesCount = tripMemories.size,
+                            coverPhotoPath = trip.coverPhotoPath ?: tripMemories.firstOrNull()?.photoPath,
+                            onClick = { onTripClick(trip.id) }
+                        )
+                    }
                 }
             }
         }
 
-        // Dialog for creating a new trip
+        // Dialog for creating a new album folder
         if (showCreateDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateDialog = false },
-                title = { Text("Create New Trip Journey", fontWeight = FontWeight.Bold, color = NomoTerracotta) },
+                title = { Text("Create New Album Folder", fontWeight = FontWeight.Bold, color = NomoTerracotta) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
                             value = newTripName,
                             onValueChange = { newTripName = it },
-                            label = { Text("Trip Name (e.g. Jaipur Weekend)") },
+                            label = { Text("Album Name (e.g. 🥟 Momos, 🍜 Noodles)") },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = newTripDesc,
                             onValueChange = { newTripDesc = it },
-                            label = { Text("Description (e.g. Delhi → Jaipur food walk)") },
+                            label = { Text("Folder Description (Optional)") },
                             shape = RoundedCornerShape(12.dp)
                         )
                     }
@@ -202,7 +164,7 @@ fun TripsScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = NomoTerracotta)
                     ) {
-                        Text("Create Trip")
+                        Text("Create Folder")
                     }
                 },
                 dismissButton = {
@@ -218,94 +180,67 @@ fun TripsScreen(
 }
 
 @Composable
-private fun TripItemCard(
+private fun AlbumFolderCard(
     trip: TripEntity,
     memoriesCount: Int,
     coverPhotoPath: String?,
     onClick: () -> Unit
 ) {
-    val dateFormatted = remember(trip.startDate) {
-        SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.startDate))
-    }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.5.dp, NomoTerracotta.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+            .height(180.dp)
+            .border(1.5.dp, NomoCardBorder, RoundedCornerShape(20.dp))
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = NomoSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
         ) {
-            coverPhotoPath?.let { path ->
-                AsyncImage(
-                    model = File(path),
-                    contentDescription = trip.name,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(NomoCream),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(14.dp))
-            } ?: run {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(NomoWarmAmber),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Luggage, contentDescription = null, tint = NomoDeepCharcoal, modifier = Modifier.size(36.dp))
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = trip.name,
-                    style = Typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = NomoDeepCharcoal
-                )
-                
-                trip.description?.takeIf { it.isNotBlank() }?.let { desc ->
-                    Text(
-                        text = desc,
-                        style = Typography.bodyMedium,
-                        color = NomoDeepCharcoal.copy(alpha = 0.7f),
-                        maxLines = 1
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(NomoCream),
+                contentAlignment = Alignment.Center
+            ) {
+                if (!coverPhotoPath.isNullOrBlank()) {
+                    AsyncImage(
+                        model = File(coverPhotoPath),
+                        contentDescription = trip.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "📅 $dateFormatted",
-                        fontSize = 12.sp,
-                        color = NomoSage,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "📌 $memoriesCount memories",
-                        fontSize = 12.sp,
-                        color = NomoTerracotta,
-                        fontWeight = FontWeight.Bold
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = null,
+                        tint = NomoTerracotta,
+                        modifier = Modifier.size(44.dp)
                     )
                 }
             }
 
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = "View Trip",
-                tint = NomoTerracotta,
-                modifier = Modifier.size(28.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = trip.name,
+                style = Typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = NomoDeepCharcoal,
+                maxLines = 1
+            )
+
+            Text(
+                text = "$memoriesCount photos",
+                fontSize = 11.sp,
+                color = NomoSage,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

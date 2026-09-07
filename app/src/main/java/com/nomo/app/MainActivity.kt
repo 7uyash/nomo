@@ -157,6 +157,17 @@ class MainActivity : ComponentActivity() {
             onThisDayMemory = otdList.firstOrNull()
         }
 
+        // Populate default album folders if empty
+        LaunchedEffect(trips) {
+            if (trips.isEmpty()) {
+                repository.createTrip("🥟 Momos", "Best momo spots & food joints", null)
+                repository.createTrip("🍜 Noodles", "Ramen, Chowmein & Noodle spots", null)
+                repository.createTrip("⭐ Best Places", "Favorite places & recommendations", null)
+                repository.createTrip("🍕 Food Finds", "Delicious food experiences", null)
+                repository.createTrip("📸 Memories", "General memories collection", null)
+            }
+        }
+
         // Photo Take Picture Contract Launcher
         val cameraLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.TakePicture()
@@ -277,17 +288,17 @@ class MainActivity : ComponentActivity() {
                             userLon = userLon
                         )
 
-                        "Memories" -> TimelineScreen(
+                        "Timeline", "Memories" -> TimelineScreen(
                             memories = memories,
                             onMemoryClick = { id -> selectedDetailMemoryId = id }
                         )
 
-                        "Food" -> TripsScreen(
+                        "Albums", "Food" -> TripsScreen(
                             trips = trips,
                             memories = memories,
                             onTripClick = { tripId ->
                                 selectedTripFilterId = tripId
-                                currentTab = "Memories"
+                                currentTab = "Timeline"
                             },
                             onCreateTripClick = { name, desc ->
                                 lifecycleScope.launch {
@@ -383,12 +394,12 @@ private fun NomoBottomNavBar(
                 onClick = { onTabSelected("Map") }
             )
 
-            // Memories tab
+            // Timeline tab
             NavItem(
-                label = "Memories",
+                label = "Timeline",
                 icon = Icons.Default.Timeline,
-                isSelected = currentTab == "Memories",
-                onClick = { onTabSelected("Memories") }
+                isSelected = currentTab == "Timeline" || currentTab == "Memories",
+                onClick = { onTabSelected("Timeline") }
             )
 
             // Center + capture FAB (yellow, larger)
@@ -408,12 +419,12 @@ private fun NomoBottomNavBar(
                 )
             }
 
-            // Food tab
+            // Albums tab
             NavItem(
-                label = "Food",
-                icon = Icons.Default.Restaurant,
-                isSelected = currentTab == "Food",
-                onClick = { onTabSelected("Food") }
+                label = "Albums",
+                icon = androidx.compose.material.icons.Icons.Default.Folder,
+                isSelected = currentTab == "Albums" || currentTab == "Food",
+                onClick = { onTabSelected("Albums") }
             )
 
             // Settings tab

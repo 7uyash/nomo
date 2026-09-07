@@ -19,7 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Luggage
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -159,7 +159,7 @@ fun QuickCaptureBottomSheet(
                 }
             }
 
-            // Expanded Edit Mode (Title, Optional Note, and Trip tagger)
+            // Expanded Edit Mode (Title and Optional Note)
             AnimatedVisibility(
                 visible = isEditing,
                 enter = fadeIn() + expandVertically(),
@@ -197,62 +197,63 @@ fun QuickCaptureBottomSheet(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Optional Trip Tagger (if trips exist)
-                    if (availableTrips.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
 
-                        Text(
-                            text = "Add to Trip Collection (Optional)",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = NomoDeepCharcoal
-                        )
+            // Add to Album / Folder Selector
+            if (availableTrips.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(14.dp))
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Add to Album / Folder",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = NomoDeepCharcoal,
+                    modifier = Modifier.align(Alignment.Start)
+                )
 
-                        Row(
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    availableTrips.forEach { trip ->
+                        val isSelected = selectedTripId == trip.id
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                .background(
+                                    if (isSelected) NomoSage else NomoCream,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .border(
+                                    1.5.dp,
+                                    if (isSelected) NomoTerracotta else NomoCardBorder,
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .clickable { selectedTripId = if (isSelected) null else trip.id }
+                                .padding(horizontal = 12.dp, vertical = 7.dp)
                         ) {
-                            availableTrips.forEach { trip ->
-                                val isSelected = selectedTripId == trip.id
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            if (isSelected) NomoSage else NomoCream,
-                                            shape = RoundedCornerShape(12.dp)
-                                        )
-                                        .border(
-                                            1.5.dp,
-                                            if (isSelected) NomoTerracotta else NomoCardBorder,
-                                            RoundedCornerShape(12.dp)
-                                        )
-                                        .clickable { selectedTripId = if (isSelected) null else trip.id }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Luggage,
-                                            contentDescription = null,
-                                            tint = if (isSelected) NomoCream else NomoDeepCharcoal,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = trip.name,
-                                            fontSize = 12.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isSelected) NomoCream else NomoDeepCharcoal
-                                        )
-                                    }
-                                }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Folder,
+                                    contentDescription = null,
+                                    tint = if (isSelected) NomoCream else NomoTerracotta,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = trip.name,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) NomoCream else NomoDeepCharcoal
+                                )
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 
@@ -289,7 +290,7 @@ fun QuickCaptureBottomSheet(
                         onSaveMemory(
                             dishName,
                             placeName,
-                            "",          // No food vibe UI
+                            "",          // No food vibe
                             "Personal",  // Default category
                             note,
                             selectedTripId
