@@ -97,7 +97,7 @@ fun ProfileSyncScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "📸 Local Gallery & Album Status",
+                            text = "Local Gallery & Album Status",
                             style = Typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = NomoDeepCharcoal
@@ -156,19 +156,6 @@ fun ProfileSyncScreen(
                                     )
                                 }
                             }
-                        }
-
-                        Spacer(modifier = Modifier.height(14.dp))
-                        HorizontalDivider(color = NomoCardBorder.copy(alpha = 0.6f))
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Storage Counts
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            StatCard(title = "Memories Saved", count = memories.size, icon = "📌", color = NomoTerracotta)
-                            StatCard(title = "Photos in Album", count = photoCount, icon = "🖼️", color = NomoSage)
                         }
                     }
                 }
@@ -263,24 +250,5 @@ fun ProfileSyncScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun StatCard(title: String, count: Int, icon: String, color: Color) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .background(NomoCream, RoundedCornerShape(16.dp))
-            .border(1.dp, NomoCardBorder, RoundedCornerShape(16.dp))
-            .padding(horizontal = 22.dp, vertical = 12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = icon, fontSize = 18.sp)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = "$count", fontSize = 22.sp, fontWeight = FontWeight.Black, color = color)
-        }
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(text = title, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = NomoDeepCharcoal)
     }
 }

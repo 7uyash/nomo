@@ -10,8 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,34 +48,37 @@ fun TripsScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header & Create Album Button
+            // Header & Create Collection Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "📁 Albums & Folders",
+                        text = "Food Collections",
                         style = Typography.headlineMedium,
                         color = NomoTerracotta,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Organize photos into Momos, Noodles, Best Places...",
+                        text = "Organize your food experiences into albums",
                         style = Typography.bodyMedium,
                         color = NomoDeepCharcoal.copy(alpha = 0.7f)
                     )
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Button(
                     onClick = { showCreateDialog = true },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NomoWarmAmber)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = NomoTerracotta),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = NomoDeepCharcoal)
+                    Icon(Icons.Default.Add, contentDescription = null, tint = NomoCream, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("New Album", color = NomoDeepCharcoal, fontWeight = FontWeight.Bold)
+                    Text("New Collection", color = NomoCream, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
 
@@ -95,16 +97,15 @@ fun TripsScreen(
                         modifier = Modifier.padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "📁 🥟 🍜", fontSize = 40.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "No custom albums yet",
+                            text = "No collections created yet",
                             style = Typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = NomoDeepCharcoal
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Tap 'New Album' to create folders like Momos, Noodles, Best Places, or Food Finds!",
+                            text = "Tap 'New Collection' to create custom albums like Momos, Noodles, or Best Places.",
                             style = Typography.bodyMedium,
                             color = NomoDeepCharcoal.copy(alpha = 0.7f)
                         )
@@ -130,24 +131,24 @@ fun TripsScreen(
             }
         }
 
-        // Dialog for creating a new album folder
+        // Dialog for creating a new collection
         if (showCreateDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateDialog = false },
-                title = { Text("Create New Album Folder", fontWeight = FontWeight.Bold, color = NomoTerracotta) },
+                title = { Text("Create New Food Collection", fontWeight = FontWeight.Bold, color = NomoTerracotta) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
                             value = newTripName,
                             onValueChange = { newTripName = it },
-                            label = { Text("Album Name (e.g. 🥟 Momos, 🍜 Noodles)") },
+                            label = { Text("Collection Name (e.g. Momos, Noodles, Best Places)") },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = newTripDesc,
                             onValueChange = { newTripDesc = it },
-                            label = { Text("Folder Description (Optional)") },
+                            label = { Text("Description (Optional)") },
                             shape = RoundedCornerShape(12.dp)
                         )
                     }
@@ -164,7 +165,7 @@ fun TripsScreen(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = NomoTerracotta)
                     ) {
-                        Text("Create Folder")
+                        Text("Create")
                     }
                 },
                 dismissButton = {
@@ -218,10 +219,10 @@ private fun AlbumFolderCard(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Folder,
+                        imageVector = Icons.Default.Restaurant,
                         contentDescription = null,
                         tint = NomoTerracotta,
-                        modifier = Modifier.size(44.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                 }
             }

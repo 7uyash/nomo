@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Explore
@@ -155,17 +156,6 @@ class MainActivity : ComponentActivity() {
             }
             val otdList = repository.getOnThisDayMemories()
             onThisDayMemory = otdList.firstOrNull()
-        }
-
-        // Populate default album folders if empty
-        LaunchedEffect(trips) {
-            if (trips.isEmpty()) {
-                repository.createTrip("🥟 Momos", "Best momo spots & food joints", null)
-                repository.createTrip("🍜 Noodles", "Ramen, Chowmein & Noodle spots", null)
-                repository.createTrip("⭐ Best Places", "Favorite places & recommendations", null)
-                repository.createTrip("🍕 Food Finds", "Delicious food experiences", null)
-                repository.createTrip("📸 Memories", "General memories collection", null)
-            }
         }
 
         // Photo Take Picture Contract Launcher
@@ -419,12 +409,12 @@ private fun NomoBottomNavBar(
                 )
             }
 
-            // Albums tab
+            // Food tab
             NavItem(
-                label = "Albums",
-                icon = androidx.compose.material.icons.Icons.Default.Folder,
-                isSelected = currentTab == "Albums" || currentTab == "Food",
-                onClick = { onTabSelected("Albums") }
+                label = "Food",
+                icon = Icons.Default.Restaurant,
+                isSelected = currentTab == "Food" || currentTab == "Albums",
+                onClick = { onTabSelected("Food") }
             )
 
             // Settings tab
