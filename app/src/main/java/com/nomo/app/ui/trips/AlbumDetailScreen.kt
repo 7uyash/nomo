@@ -130,7 +130,7 @@ fun AlbumDetailScreen(
                     ) {
                         AsyncImage(
                             model = File(memory.photoPath),
-                            contentDescription = memory.dishName.ifBlank { "Memory photo" },
+                            contentDescription = memory.dishName.orEmpty().ifBlank { "Memory photo" },
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
