@@ -10,13 +10,13 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = NomoTerracotta,
-    secondary = NomoWarmAmber,
+    primary = NomoWarmAmber,
+    secondary = NomoTerracotta,
     tertiary = NomoSage,
     background = NomoCream,
     surface = NomoSurface,
-    onPrimary = NomoCream,
-    onSecondary = NomoDeepCharcoal,
+    onPrimary = NomoDeepCharcoal,
+    onSecondary = NomoCream,
     onTertiary = NomoCream,
     onBackground = NomoDeepCharcoal,
     onSurface = NomoDeepCharcoal,
