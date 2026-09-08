@@ -73,12 +73,12 @@ fun TripsScreen(
                 Button(
                     onClick = { showCreateDialog = true },
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NomoTerracotta),
+                    colors = ButtonDefaults.buttonColors(containerColor = NomoWarmAmber, contentColor = NomoDeepCharcoal),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = NomoCream, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, tint = NomoDeepCharcoal, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("New Collection", color = NomoCream, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("New Collection", color = NomoDeepCharcoal, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
 
@@ -163,7 +163,7 @@ fun TripsScreen(
                                 showCreateDialog = false
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = NomoTerracotta)
+                        colors = ButtonDefaults.buttonColors(containerColor = NomoWarmAmber, contentColor = NomoDeepCharcoal)
                     ) {
                         Text("Create")
                     }
