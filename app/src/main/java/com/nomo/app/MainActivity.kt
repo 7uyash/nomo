@@ -523,3 +523,111 @@ private fun NavItem(
         )
     }
 }
+
+/**
+ * Full-screen blocking gate shown when location permission is denied
+ * or device location services are disabled.
+ */
+@Composable
+private fun LocationGateScreen(
+    permissionMissing: Boolean,
+    onRequestPermission: () -> Unit,
+    onOpenLocationSettings: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF1A1207),
+                        Color(0xFF2D1F0A),
+                        Color(0xFF3D2B12)
+                    )
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+        ) {
+            // Icon badge
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(Color(0xFFFFC105).copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(Color(0xFFFFC105).copy(alpha = 0.25f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "📍", fontSize = 38.sp)
+                }
+            }
+
+            // Title
+            Text(
+                text = if (permissionMissing) "Location Access Needed" else "Turn On Location",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFC105),
+                textAlign = TextAlign.Center
+            )
+
+            // Description
+            Text(
+                text = if (permissionMissing) {
+                    "NOMO needs access to your location to show your food memories on the map and help you rediscover nearby experiences."
+                } else {
+                    "Your device's location services are turned off. Please enable GPS or Network location so NOMO can place you on the map."
+                },
+                fontSize = 15.sp,
+                color = Color(0xFFFFFDF9).copy(alpha = 0.75f),
+                textAlign = TextAlign.Center,
+                lineHeight = 22.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Primary action button
+            Button(
+                onClick = if (permissionMissing) onRequestPermission else onOpenLocationSettings,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFC105),
+                    contentColor = Color(0xFF1A1207)
+                )
+            ) {
+                Text(
+                    text = if (permissionMissing) "Grant Location Permission" else "Open Location Settings",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+            }
+
+            // Helper hint
+            Text(
+                text = if (permissionMissing) {
+                    "You will be asked to allow location access. Please tap \"Allow\" to continue."
+                } else {
+                    "After enabling location, come back to the app — it will open automatically."
+                },
+                fontSize = 12.sp,
+                color = Color(0xFFFFFDF9).copy(alpha = 0.45f),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
