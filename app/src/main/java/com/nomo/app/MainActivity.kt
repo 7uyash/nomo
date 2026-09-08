@@ -1,12 +1,21 @@
 package com.nomo.app
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -36,10 +45,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
@@ -88,6 +100,68 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun NomoAppMainScreen() {
+        // ── Location gate state ───────────────────────────────────────────
+        var locationPermissionGranted by remember {
+            mutableStateOf(
+                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            )
+        }
+        var locationServicesEnabled by remember { mutableStateOf(locationHelper.isLocationEnabled()) }
+
+        // Re-check both whenever the app comes back to the foreground (e.g. after user changes settings)
+        LaunchedEffect(Unit) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                locationPermissionGranted = ContextCompat.checkSelfPermission(
+                    this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    this@MainActivity, Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                locationServicesEnabled = locationHelper.isLocationEnabled()
+            }
+        }
+
+        val startupPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            locationServicesEnabled = locationHelper.isLocationEnabled()
+        }
+
+        // First-time permission request
+        LaunchedEffect(Unit) {
+            if (!locationPermissionGranted) {
+                startupPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
+
+        // Show blocking gate screen if permission or services are not available
+        if (!locationPermissionGranted || !locationServicesEnabled) {
+            LocationGateScreen(
+                permissionMissing = !locationPermissionGranted,
+                onRequestPermission = {
+                    startupPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                },
+                onOpenLocationSettings = {
+                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+            )
+            return
+        }
+
+        // ── App state (only reached when location is fully available) ─────
         var currentTab by remember { mutableStateOf("Map") }
         var selectedDetailMemoryId by remember { mutableStateOf<String?>(null) }
         var selectedTripFilterId by remember { mutableStateOf<String?>(null) }
@@ -115,44 +189,19 @@ class MainActivity : ComponentActivity() {
         var userLat by remember { mutableStateOf(0.0) }
         var userLon by remember { mutableStateOf(0.0) }
 
-        var locationPermissionGranted by remember {
-            mutableStateOf(
-                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            )
-        }
-
-        val startupPermissionLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        }
-
-        // On first launch: ask for location permission if not already granted
+        // Fetch live location immediately (permission is guaranteed at this point)
         LaunchedEffect(Unit) {
-            if (!locationPermissionGranted) {
-                startupPermissionLauncher.launch(
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    )
-                )
-            }
-        }
-
-        // Fetch live location the moment permission is granted (or was already granted)
-        LaunchedEffect(locationPermissionGranted) {
-            if (locationPermissionGranted) {
-                val loc = locationHelper.getCurrentLocation()
-                if (loc != null) {
-                    userLat = loc.latitude
-                    userLon = loc.longitude
-                }
+            val loc = locationHelper.getCurrentLocation()
+            if (loc != null) {
+                userLat = loc.latitude
+                userLon = loc.longitude
             }
         }
 
         // Resurfacing / On-This-Day check (runs whenever memories list changes)
-        LaunchedEffect(memories) {
-            if (locationPermissionGranted && userLat != 0.0 && userLon != 0.0) {
+        // Location permission is guaranteed at this point (gate above handles missing permission)
+        LaunchedEffect(memories, userLat, userLon) {
+            if (userLat != 0.0 && userLon != 0.0) {
                 val match = repository.getResurfacingMemoryNear(userLat, userLon)
                 resurfacingMatch = match
             }

@@ -16,6 +16,16 @@ class LocationHelper(private val context: Context) {
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     /**
+     * Returns true if the device has at least one location provider (GPS or Network) enabled.
+     */
+    fun isLocationEnabled(): Boolean {
+        return try {
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        } catch (_: Exception) { false }
+    }
+
+    /**
      * Returns the best available location within a 10-second window.
      * Priority: GPS cached (10 min) → Network cached (10 min) → live GPS fix → live Network fix → stale cached → null
      */
