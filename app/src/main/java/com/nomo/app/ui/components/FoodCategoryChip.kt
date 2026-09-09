@@ -23,13 +23,13 @@ fun FoodCategoryChip(
     modifier: Modifier = Modifier
 ) {
     val (emoji, chipColor) = when (category) {
-        "Food" -> "🍕" to NomoTerracotta
+        "Food" -> "🍕" to NomoSage
         "Cafe" -> "☕" to NomoWarmAmber
         "Travel" -> "✈️" to NomoSage
         "Event" -> "🎉" to NomoEventRose
         "Shopping" -> "🛒" to NomoWarmAmber
         "Landmark" -> "🏛️" to NomoLandmarkPurple
-        "Personal" -> "⭐" to NomoTerracotta
+        "Personal" -> "⭐" to NomoSage
         else -> "📍" to NomoDeepCharcoal
     }
 

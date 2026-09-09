@@ -92,7 +92,7 @@ fun TimelineScreen(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 placeholder = { Text("Search location, title, notes, date...", fontSize = 13.sp) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = NomoTerracotta) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = NomoSage) },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
                         IconButton(onClick = { searchQuery = "" }) {
@@ -106,10 +106,17 @@ fun TimelineScreen(
                     .fillMaxWidth()
                     .padding(bottom = 12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = NomoWarmAmber,
+                    focusedTextColor = NomoDeepCharcoal,
+                    unfocusedTextColor = NomoDeepCharcoal,
+                    focusedLabelColor = NomoDeepCharcoal,
+                    unfocusedLabelColor = NomoDeepCharcoal.copy(alpha = 0.7f),
+                    focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                    unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                    focusedBorderColor = NomoSage,
                     unfocusedBorderColor = NomoCardBorder,
                     focusedContainerColor = NomoSurface,
-                    unfocusedContainerColor = NomoSurface
+                    unfocusedContainerColor = NomoSurface,
+                    cursorColor = NomoDeepCharcoal
                 )
             )
 
@@ -119,7 +126,7 @@ fun TimelineScreen(
                     text = "Search Results (${searchResults.size})",
                     style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = NomoTerracotta,
+                    color = NomoSage,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -307,7 +314,7 @@ private fun SearchResultItem(
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = NomoTerracotta,
+                        tint = NomoSage,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
@@ -353,7 +360,7 @@ private fun CalendarDayCell(
             .background(if (hasMemories) NomoSurface else NomoCream.copy(alpha = 0.5f))
             .border(
                 width = 1.dp,
-                color = if (hasMemories) NomoTerracotta.copy(alpha = 0.5f) else NomoCardBorder,
+                color = if (hasMemories) NomoSage.copy(alpha = 0.5f) else NomoCardBorder,
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable(enabled = hasMemories) { onClick() },

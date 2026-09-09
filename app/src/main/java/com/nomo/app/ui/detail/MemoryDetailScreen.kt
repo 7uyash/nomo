@@ -62,7 +62,7 @@ fun MemoryDetailScreen(
                     text = memory.category,
                     style = Typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = NomoTerracotta
+                    color = NomoSage
                 )
 
                 IconButton(onClick = { onDeleteClick(memory) }) {
@@ -85,7 +85,7 @@ fun MemoryDetailScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.5.dp, NomoTerracotta, RoundedCornerShape(24.dp)),
+                    .border(2.5.dp, NomoSage, RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
@@ -148,12 +148,12 @@ fun MemoryDetailScreen(
                     if (!memory.dishName.isNull_or_empty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = NomoTerracotta, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = NomoSage, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = memory.placeName,
                                 style = Typography.titleMedium,
-                                color = NomoTerracotta,
+                                color = NomoSage,
                                 fontWeight = FontWeight.Bold
                             )
                         }

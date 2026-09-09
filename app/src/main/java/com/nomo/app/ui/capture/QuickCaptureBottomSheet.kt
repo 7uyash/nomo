@@ -185,7 +185,17 @@ fun QuickCaptureBottomSheet(
                         placeholder = { Text("Enter a title for this memory...", fontSize = 11.sp) },
                         singleLine = true,
                         shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = NomoDeepCharcoal,
+                            unfocusedTextColor = NomoDeepCharcoal,
+                            focusedLabelColor = NomoDeepCharcoal,
+                            unfocusedLabelColor = NomoDeepCharcoal.copy(alpha = 0.7f),
+                            focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            focusedBorderColor = NomoSage,
+                            cursorColor = NomoDeepCharcoal
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -198,7 +208,17 @@ fun QuickCaptureBottomSheet(
                         placeholder = { Text("Write personal details, story, or recommendations...", fontSize = 11.sp) },
                         maxLines = 3,
                         shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = NomoDeepCharcoal,
+                            unfocusedTextColor = NomoDeepCharcoal,
+                            focusedLabelColor = NomoDeepCharcoal,
+                            unfocusedLabelColor = NomoDeepCharcoal.copy(alpha = 0.7f),
+                            focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            focusedBorderColor = NomoSage,
+                            cursorColor = NomoDeepCharcoal
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -236,7 +256,7 @@ fun QuickCaptureBottomSheet(
                             )
                             .border(
                                 1.5.dp,
-                                if (isSelected) NomoTerracotta else NomoCardBorder,
+                                if (isSelected) NomoSage else NomoCardBorder,
                                 RoundedCornerShape(12.dp)
                             )
                             .clickable { selectedTripId = if (isSelected) null else trip.id }
@@ -246,7 +266,7 @@ fun QuickCaptureBottomSheet(
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = null,
-                                tint = if (isSelected) NomoCream else NomoTerracotta,
+                                tint = if (isSelected) NomoCream else NomoSage,
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -313,7 +333,17 @@ fun QuickCaptureBottomSheet(
                         placeholder = { Text("e.g. Momos, Best Places...", fontSize = 11.sp) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = NomoDeepCharcoal,
+                            unfocusedTextColor = NomoDeepCharcoal,
+                            focusedLabelColor = NomoDeepCharcoal,
+                            unfocusedLabelColor = NomoDeepCharcoal.copy(alpha = 0.7f),
+                            focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            focusedBorderColor = NomoSage,
+                            cursorColor = NomoDeepCharcoal
+                        )
                     )
                     Button(
                         onClick = {

@@ -512,14 +512,14 @@ private fun NavItem(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = if (isSelected) NomoTerracotta else NomoDeepCharcoal.copy(alpha = 0.5f),
+            tint = if (isSelected) NomoSage else NomoDeepCharcoal.copy(alpha = 0.5f),
             modifier = Modifier.size(24.dp)
         )
         Text(
             text = label,
             fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) NomoTerracotta else NomoDeepCharcoal.copy(alpha = 0.6f)
+            color = if (isSelected) NomoSage else NomoDeepCharcoal.copy(alpha = 0.6f)
         )
     }
 }

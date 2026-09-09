@@ -3,7 +3,7 @@ package com.nomo.app.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // NOMO Playful & Warm Palette (STRICTLY NO COLOR GRADIENTS)
-val NomoTerracotta = Color(0xFFD96B43)
+val NomoTerracotta = Color(0xFF5B8C67) // Changed to Green for screen font colors
 val NomoWarmAmber = Color(0xFFFFC105)
 val NomoSage = Color(0xFF5B8C67)
 val NomoDeepCharcoal = Color(0xFF232528)
@@ -12,7 +12,7 @@ val NomoSurface = Color(0xFFFFFDF9)
 val NomoCardBorder = Color(0xFFEAE3D9)
 
 // Category & Vibe colors (Flat)
-val NomoFoodOrange = Color(0xFFE65100)
+val NomoFoodOrange = Color(0xFF5B8C67)
 val NomoCafeBrown = Color(0xFF6D4C41)
 val NomoTravelBlue = Color(0xFF0288D1)
 val NomoLandmarkPurple = Color(0xFF7B1FA2)

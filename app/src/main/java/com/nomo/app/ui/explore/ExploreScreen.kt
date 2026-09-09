@@ -115,12 +115,17 @@ fun ExploreScreen(
                             .weight(1f)
                             .height(50.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .border(1.5.dp, NomoWarmAmber, RoundedCornerShape(16.dp)),
+                            .border(1.5.dp, NomoSage, RoundedCornerShape(16.dp)),
                         colors = TextFieldDefaults.colors(
+                            focusedTextColor = NomoDeepCharcoal,
+                            unfocusedTextColor = NomoDeepCharcoal,
+                            focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                            unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
                             focusedContainerColor = NomoSurface,
                             unfocusedContainerColor = NomoSurface,
                             focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                            unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            cursorColor = NomoDeepCharcoal
                         ),
                         trailingIcon = {
                             IconButton(onClick = { searchQuery = ""; showSearchField = false }) {
@@ -363,7 +368,7 @@ fun ExploreScreen(
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = "View Memory",
-                        tint = NomoTerracotta,
+                        tint = NomoSage,
                         modifier = Modifier.size(28.dp)
                     )
                 }

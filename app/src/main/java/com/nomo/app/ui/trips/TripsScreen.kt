@@ -58,7 +58,7 @@ fun TripsScreen(
                     Text(
                         text = "Food Collections",
                         style = Typography.headlineMedium,
-                        color = NomoTerracotta,
+                        color = NomoSage,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
@@ -135,7 +135,7 @@ fun TripsScreen(
         if (showCreateDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateDialog = false },
-                title = { Text("Create New Food Collection", fontWeight = FontWeight.Bold, color = NomoTerracotta) },
+                title = { Text("Create New Food Collection", fontWeight = FontWeight.Bold, color = NomoSage) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
@@ -143,13 +143,33 @@ fun TripsScreen(
                             onValueChange = { newTripName = it },
                             label = { Text("Collection Name (e.g. Momos, Noodles, Best Places)") },
                             singleLine = true,
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = NomoDeepCharcoal,
+                                unfocusedTextColor = NomoDeepCharcoal,
+                                focusedLabelColor = NomoDeepCharcoal,
+                                unfocusedLabelColor = NomoDeepCharcoal.copy(alpha = 0.7f),
+                                focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                                unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                                focusedBorderColor = NomoSage,
+                                cursorColor = NomoDeepCharcoal
+                            )
                         )
                         OutlinedTextField(
                             value = newTripDesc,
                             onValueChange = { newTripDesc = it },
                             label = { Text("Description (Optional)") },
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = NomoDeepCharcoal,
+                                unfocusedTextColor = NomoDeepCharcoal,
+                                focusedLabelColor = NomoDeepCharcoal,
+                                unfocusedLabelColor = NomoDeepCharcoal.copy(alpha = 0.7f),
+                                focusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                                unfocusedPlaceholderColor = NomoDeepCharcoal.copy(alpha = 0.5f),
+                                focusedBorderColor = NomoSage,
+                                cursorColor = NomoDeepCharcoal
+                            )
                         )
                     }
                 },
@@ -221,7 +241,7 @@ private fun AlbumFolderCard(
                     Icon(
                         imageVector = Icons.Default.Restaurant,
                         contentDescription = null,
-                        tint = NomoTerracotta,
+                        tint = NomoSage,
                         modifier = Modifier.size(40.dp)
                     )
                 }
