@@ -135,7 +135,7 @@ fun QuickCaptureBottomSheet(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = "$placeName · Today · Private",
+                        text = "$placeName   · Today · Private",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = NomoDeepCharcoal.copy(alpha = 0.6f),
